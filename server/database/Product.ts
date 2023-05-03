@@ -1,7 +1,7 @@
 import mongoose, { Schema, Types, model } from 'mongoose';
-import { faker } from '@faker-js/faker';
+// import { faker } from '@faker-js/faker';
 
-interface Product {
+export interface Product {
   _id?: Types.ObjectId;
   productName: string;
   productDesc: string;
@@ -27,33 +27,33 @@ const productSchema = new Schema<Product>({
   ],
 });
 
-const generateProduct = (count: number): Product[] => {
-  const products = [];
+// const generateProduct = (count: number): Product[] => {
+//   const products = [];
 
-  for (let i = 0; i < count; i++) {
-    const productName = faker.commerce.productName();
-    const productDesc = faker.commerce.productDescription();
-    const brand = faker.company.name();
-    const price = faker.datatype.float({ min: 20, max: 1000, precision: 0.01 });
-    const qty = faker.datatype.number({ min: 1, max: 5 });
-    const imageURL = faker.image.cats();
-    const tags = [new Types.ObjectId()];
+//   for (let i = 0; i < count; i++) {
+//     const productName = faker.commerce.productName();
+//     const productDesc = faker.commerce.productDescription();
+//     const brand = faker.company.name();
+//     const price = faker.datatype.float({ min: 20, max: 1000, precision: 0.01 });
+//     const qty = faker.datatype.number({ min: 1, max: 5 });
+//     const imageURL = faker.image.cats();
+//     const tags = [new Types.ObjectId()];
 
-    products.push({
-      productName,
-      productDesc,
-      brand,
-      price,
-      qty,
-      imageURL,
-      tags,
-    });
-  }
+//     products.push({
+//       productName,
+//       productDesc,
+//       brand,
+//       price,
+//       qty,
+//       imageURL,
+//       tags,
+//     });
+//   }
 
-  return products;
-};
+//   return products;
+// };
 
-const mockProducts = generateProduct(100);
-console.dir(mockProducts, {depth: 10})
+// const mockProducts = generateProduct(100);
+// console.dir(mockProducts, {depth: 10})
 
 export default mongoose.model('Product', productSchema);
