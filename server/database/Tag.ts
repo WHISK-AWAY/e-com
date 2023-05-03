@@ -1,6 +1,6 @@
 import mongoose, { Schema, Types, model } from 'mongoose';
 
-interface Tag {
+export interface Tag {
   _id?: Types.ObjectId;
   tagName: string;
 }
