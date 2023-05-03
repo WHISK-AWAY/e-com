@@ -1,31 +1,38 @@
-import mongoose from 'mongoose';
 import dotenv from 'dotenv';
+import User from './database/User';
+import mongoose, { Types, model } from 'mongoose';
 dotenv.config();
 
 const MONGO_DB_URL = process.env.MONGO_DB_URL!;
 
 const { Schema } = mongoose;
 
-// const userSchema = new Schema({
-//   firstName: String,
-//   lastName: String,
-//   email: String,
-
-// });
-
 main().catch((err) => console.log(err));
 
 async function main() {
   await mongoose.connect(MONGO_DB_URL);
+  await User.deleteMany();
   // const user = mongoose.model('User', userSchema);
-  // const newUser = new user({
-  //   firstName: 'ulysses',
-  //   lastName: 'Cat',
-  //   email: 'ucat@email.com',
-  // });
+  const newUser = new User({
+    firstName: 'ulysses',
+    lastName: 'Cat',
+    email: 'ucat@email.com',
+    password: 'supersecure',
+    address: {
+      street_1: '123 Moonshine dr',
+      city: 'Springfield',
+      state: 'NY',
+      zip: '11223',
+    },
+    cart: {
+      products: {
+        product: new mongoose.Types.ObjectId(),
+        qty: 3,
+      },
+    },
+  });
 
-  // await newUser.save();
-
+  await newUser.save();
 
   console.log('connected?');
   // use `await mongoose.connect('mongodb://user:password@127.0.0.1:27017/test');` if your database has auth enabled
