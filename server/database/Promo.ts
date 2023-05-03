@@ -1,6 +1,6 @@
 import mongoose, { Schema ,Types, model } from 'mongoose';
 
-interface Promo {
+export interface Promo {
   _id?: Types.ObjectId
   promoCodeName: string
   promoRate: number,
