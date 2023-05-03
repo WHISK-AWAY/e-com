@@ -2,7 +2,7 @@ import mongoose, { Schema, Types } from 'mongoose';
 // const {  Types } = mongoose;
 
 interface Cart {
-  products: {
+  products?: {
     product: Types.ObjectId;
     price?: number;
     qty: number;
@@ -23,10 +23,10 @@ const cartSchema = new Schema<Cart>(
     virtuals: {
       subtotal: {
         get(this: Cart) {
-          const productSubtotal = this.products.reduce((accum: number, product) => {
+          const productSubtotal = this?.products?.reduce((accum: number, product) => {
             return accum + product?.price! * product?.qty;
           }, 0)
-          
+
           return productSubtotal;
         },
         ref: 'Product'
@@ -47,7 +47,7 @@ interface User {
     state: string;
     zip: string;
   };
-  favorites: Types.ObjectId[];
+  favorites?: Types.ObjectId[];
   cart: Cart;
   role: 'admin' | 'user' | 'guest';
 }
