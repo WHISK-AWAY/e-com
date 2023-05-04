@@ -8,12 +8,14 @@ import {
   generateTag,
   generateOrder,
   generatePromo,
+  generateReview,
 } from './faker/mock-data';
 import User from './database/User';
 import Product from './database/Product';
 import Tag from './database/Tag';
 import Order from './database/Order';
 import Promo from './database/Promo';
+import Review from './database/Review';
 
 export async function seed() {
   await mongoose.connect(MONGO_DB_URL, {
@@ -69,8 +71,6 @@ export async function seed() {
 
   console.log('Seeding orders successful');
 
-
-
   /**
    * * SEEDING PROMOS
    */
@@ -81,8 +81,15 @@ export async function seed() {
 
   console.log('Seeding promos successful');
 
+  /**
+   * * SEEDING REVIEWS
+   */
 
+  console.log('Seeding reviews...');
 
+  const newReview = await Review.create(generateReview(50));
+
+  console.log('Seeding review successful');
 
   await mongoose.disconnect();
 }
