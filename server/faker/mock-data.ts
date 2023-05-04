@@ -1,10 +1,12 @@
-import { faker } from '@faker-js/faker';
 import mongoose, { Schema, Types } from 'mongoose';
+import { faker } from '@faker-js/faker';
 import { User } from '../database/User';
 import { Product } from '../database/Product';
 import { Tag } from '../database/Tag';
 import { Order } from '../database/Order';
 import { Promo } from '../database/Promo';
+import { Review } from '../database/Review';
+
 /**
  * *USER
  */
@@ -200,5 +202,39 @@ export const generatePromo = (count: number): Promo[] => {
 
   return promos;
 };
+
+/**
+ * * REVIEW
+ */
+
+export const generateReview = (count: number): Review[] => {
+  const reviews = [];
+
+  for (let i = 0; i < count; i++) {
+    const title = faker.word.conjunction();
+    const content = faker.lorem.sentence();
+    const date = faker.date.recent();
+    const rating = {
+      overall: faker.datatype.number({ min: 1, max: 5 }),
+      quality: faker.datatype.number({ min: 1, max: 5 }),
+      value: faker.datatype.number({ min: 1, max: 5 }),
+    };
+    const nickname = faker.internet.userName();
+    const location = `${faker.address.cityName()},  ${faker.address.stateAbbr()}`;
+    const upvote = faker.datatype.number({ min: 0, max: 14 });
+
+    reviews.push({
+      title,
+      content,
+      date,
+      rating,
+      nickname,
+      location,
+      upvote,
+    });
+  }
+  return reviews;
+};
+
 // const mockProducts = generateProduct(100);
 // console.dir(mockProducts, { depth: 10 });
