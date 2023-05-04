@@ -1,8 +1,6 @@
 import mongoose, { Schema, Types } from 'mongoose';
-import { faker } from '@faker-js/faker';
-// const {  Types } = mongoose;
 
-interface Cart {
+export interface Cart {
   products?: {
     product: { product: Types.ObjectId; price: number };
     qty: number;
@@ -54,6 +52,9 @@ export interface User {
   favorites?: Types.ObjectId[];
   cart: Cart;
   role: 'admin' | 'user' | 'guest';
+  reviewCount?: number;
+  voteCount?: number;
+  skinConcerns?: string[];
 }
 
 const userSchema = new Schema<User>({
@@ -81,6 +82,9 @@ const userSchema = new Schema<User>({
     required: true,
     default: 'user',
   },
+  reviewCount: Number,
+  voteCount: Number,
+  skinConcerns: [String],
 });
 
 // const generateUser = (count: number): User[] => {
