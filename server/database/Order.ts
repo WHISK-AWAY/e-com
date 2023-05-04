@@ -46,6 +46,7 @@ const orderSchema = new Schema<Order>({
     qty: { type: Number, required: true },
   },
   user: {
+    userId: { type: mongoose.SchemaTypes.ObjectId, ref: 'User' },
     shippingInfo: {
       firstName: { type: String, required: true },
       lastName: { type: String, required: true },
