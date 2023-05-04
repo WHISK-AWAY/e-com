@@ -120,9 +120,8 @@ export async function seed() {
 
   // iterate over each order & modify for products & user
   for (let order of newOrder) {
-    
     const orderUser = randomElement(newUser);
-    order.user._id = orderUser._id;
+    order.user.userId = orderUser._id;
     order.user.shippingInfo = {
       firstName: orderUser.firstName,
       lastName: orderUser.lastName,
@@ -131,11 +130,11 @@ export async function seed() {
       address_2: orderUser.address.address_2,
       city: orderUser.address.city,
       state: orderUser.address.state,
-      zip: orderUser.address.zip
-    }
+      zip: orderUser.address.zip,
+    };
 
     // bring in 1 to 5 products
-    const numberOfProducts = Math.ceil(Math.random() * 5)
+    const numberOfProducts = Math.ceil(Math.random() * 5);
     order.orderDetails = []; // re-initialize order details & repopulate with "real" products
 
     for (let i = 0; i < numberOfProducts; i++) {
@@ -144,23 +143,22 @@ export async function seed() {
 
       const orderProduct = {
         productName: randomProduct.productName,
-      productDesc: randomProduct.productDesc,
-      brand: randomProduct.brand,
-      imageURL: randomProduct.imageURL,
-      price: randomProduct.price,
-      qty: productQty
+        productDesc: randomProduct.productDesc,
+        brand: randomProduct.brand,
+        imageURL: randomProduct.imageURL,
+        price: randomProduct.price,
+        qty: productQty,
+      };
+
+      order.orderDetails.push(orderProduct);
     }
 
-      order.orderDetails.push(orderProduct)
-    }
-    
     // promo code, sometimes
     order.promoCode = '';
-    if (Math.random() <= 0.20) {
-      order.promoCode = randomElement(newPromo).promoCodeName;
-    }
-
-    await order.save()
+    // if (Math.random() <= 0.2) {
+    order.promoCode = randomElement(newPromo).promoCodeName;
+    // }
+    await order.save();
   }
 
   console.log('Seeding orders successful');
@@ -173,33 +171,34 @@ export async function seed() {
 
   const newReview = await Review.create(generateReview(50)); // generate a bunch of reviews
 
-  for (let user of newUser) { // iterate over each individual user
+  for (let user of newUser) {
+    // iterate over each individual user
     // decide how many reviews this user leaves
     const numberOfReviews = Math.floor(Math.random() * 3);
 
     // iterate through the number we came up with
-    for(let i = 0; i <= numberOfReviews; i++) {
+    for (let i = 0; i <= numberOfReviews; i++) {
       const currentReview = newReview.pop(); // take one review off the list of pre-generated reviews
-      console.log('currentReview:', currentReview)
+      console.log('currentReview:', currentReview);
 
       if (!currentReview) break; // just a little TS guard
 
       currentReview.user = user._id; // <-- assigns current user as this review's author
       currentReview.nickname = user.firstName;
-      currentReview.location = `${user.address.city}, ${user.address.state}`
+      currentReview.location = `${user.address.city}, ${user.address.state}`;
 
       const reviewProduct = randomElement(newProduct);
-      currentReview.product = reviewProduct._id
-      
+      currentReview.product = reviewProduct._id;
+
       await currentReview.save();
     }
-      // pick a review off the list to work with X
-      // modify the selected review to attach current user ID & information
-      
-      // decide which product this review is for
-      // modify the selecte review to attach product ID & information
+    // pick a review off the list to work with X
+    // modify the selected review to attach current user ID & information
 
-      // save the review
+    // decide which product this review is for
+    // modify the selecte review to attach product ID & information
+
+    // save the review
   }
 
   const checkReview = await Review.findOne().populate(['user', 'product ']);

@@ -3,8 +3,8 @@ import { faker } from '@faker-js/faker';
 import { User } from '../database/User';
 import { Product } from '../database/Product';
 import { ITag } from '../database/Tag';
-import { Order } from '../database/Order';
-import { Promo } from '../database/Promo';
+import { IOrder } from '../database/Order';
+import { IPromo } from '../database/Promo';
 import { Review } from '../database/Review';
 
 const SKIN_CONDITIONS = [
@@ -14,7 +14,7 @@ const SKIN_CONDITIONS = [
   'normal skin',
   'dry skin',
   'sensitive skin',
-]
+];
 
 /**
  * *USER
@@ -135,19 +135,21 @@ export const generateTag = (count: number): ITag[] => {
  * * ORDER
  */
 
-export const generateOrder = (count: number): Order[] => {
+export const generateOrder = (count: number): IOrder[] => {
   const orders = [];
 
   for (let i = 0; i < count; i++) {
-    const orderDetails = [{
-      // ! make this an array & pull from real products
-      productName: faker.commerce.productName(),
-      productDesc: faker.commerce.productDescription(),
-      brand: faker.company.name(),
-      imageURL: faker.image.cats(),
-      price: faker.datatype.float({ min: 20, max: 1000, precision: 0.01 }),
-      qty: faker.datatype.number({ min: 1, max: 5 }), // * arbitrary / random
-    }];
+    const orderDetails = [
+      {
+        // ! make this an array & pull from real products
+        productName: faker.commerce.productName(),
+        productDesc: faker.commerce.productDescription(),
+        brand: faker.company.name(),
+        imageURL: faker.image.cats(),
+        price: faker.datatype.float({ min: 20, max: 1000, precision: 0.01 }),
+        qty: faker.datatype.number({ min: 1, max: 5 }), // * arbitrary / random
+      },
+    ];
     const user = {
       userId: new mongoose.Types.ObjectId(), // ! pull at least some of these from real users (not necessarily all -- simulate guest purchases...userId should be nullable)
       shippingInfo: {
@@ -191,7 +193,7 @@ export const generateOrder = (count: number): Order[] => {
  * * PROMOS
  */
 
-export const generatePromo = (count: number): Promo[] => {
+export const generatePromo = (count: number): IPromo[] => {
   const promos = [];
 
   for (let i = 0; i < count; i++) {
@@ -248,9 +250,6 @@ export const generateReview = (count: number): Review[] => {
   }
   return reviews;
 };
-
-
-
 
 // const mockProducts = generateProduct(100);
 // console.dir(mockProducts, { depth: 10 });
