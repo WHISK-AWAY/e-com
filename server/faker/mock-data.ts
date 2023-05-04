@@ -46,6 +46,17 @@ export const generateUser = (count: number): User[] => {
       | 'user'
       | 'guest';
 
+    const reviewCount = faker.datatype.number({ min: 0, max: 15 });
+    const voteCount = faker.datatype.number({ min: 0, max: 15 });
+    const skinConcerns = faker.helpers.arrayElements([
+      'oily skin',
+      'aging skin',
+      'acne prone skin',
+      'normal skin',
+      'dry skin',
+      'sensitive skin',
+    ]);
+
     users.push({
       firstName,
       lastName,
@@ -55,6 +66,9 @@ export const generateUser = (count: number): User[] => {
       favorites,
       cart,
       role,
+      reviewCount,
+      voteCount,
+      skinConcerns,
     });
   }
   return users;
@@ -125,6 +139,7 @@ export const generateOrder = (count: number): Order[] => {
       qty: faker.datatype.number({ min: 1, max: 5 }),
     };
     const user = {
+      userId: new mongoose.Types.ObjectId(),
       shippingInfo: {
         firstName: faker.name.firstName(),
         lastName: faker.name.lastName(),
