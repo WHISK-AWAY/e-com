@@ -10,12 +10,17 @@ import {
   generatePromo,
   generateReview,
 } from './faker/mock-data';
-import User from './database/User';
-import Product from './database/Product';
-import Tag from './database/Tag';
-import Order from './database/Order';
-import Promo from './database/Promo';
-import Review from './database/Review';
+import Tag from './database/Tag'; // * no dependencies
+import Promo from './database/Promo'; // * no dependencies
+import Product from './database/Product'; // dependent on Tag
+import User from './database/User'; // dependent on Product
+import Order from './database/Order'; // dependent on Product, User, Promo
+import Review from './database/Review'; // dependent on Product, User
+
+function randomElement<T>(inputArr: T[]): T {
+  const i = Math.floor(Math.random() * inputArr.length);
+  return inputArr[i];
+}
 
 export async function seed() {
   await mongoose.connect(MONGO_DB_URL, {
@@ -26,30 +31,8 @@ export async function seed() {
     keepAlive: true,
     keepAliveInitialDelay: 300000,
   });
+
   await mongoose.connection.db.dropDatabase();
-
-  /**
-   * * SEEDING USERS
-   */
-  console.log('Seeding users...');
-
-  const newUser = await User.create(generateUser(25));
-
-  console.log('Seeding uses successful');
-
-  /**
-   * * SEEDING PRODUCTS
-   */
-
-  console.log('Seeding products...');
-
-  const newProduct = await Product.create(generateProduct(20));
-  await Product.create(generateProduct(20));
-  await Product.create(generateProduct(20));
-  await Product.create(generateProduct(20));
-  await Product.create(generateProduct(20));
-
-  console.log('Seeding products successful');
 
   /**
    * * SEEDING TAGS
@@ -62,16 +45,6 @@ export async function seed() {
   console.log('Seeding tags successful');
 
   /**
-   * * SEEDING ORDERS
-   */
-
-  console.log('Seeding orders... ');
-
-  const newOrder = await Order.create(generateOrder(20));
-
-  console.log('Seeding orders successful');
-
-  /**
    * * SEEDING PROMOS
    */
 
@@ -80,6 +53,72 @@ export async function seed() {
   const newPromo = await Promo.create(generatePromo(5));
 
   console.log('Seeding promos successful');
+
+  /**
+   * * SEEDING PRODUCTS
+   */
+
+  console.log('Seeding products...'); // * experiment with Product.insertMany() instead -- possibly more performant
+
+  const newProduct = await Product.create(generateProduct(20));
+  newProduct.push(...(await Product.create(generateProduct(20))));
+  newProduct.push(...(await Product.create(generateProduct(20))));
+  newProduct.push(...(await Product.create(generateProduct(20))));
+  newProduct.push(...(await Product.create(generateProduct(20))));
+
+  // attach tags to products
+  for (let product of newProduct) {
+    const numberOfTags = Math.floor(Math.random() * 3) + 1;
+    product.tags = [];
+    for (let i = 1; i <= numberOfTags; i++) {
+      product.tags.push(randomElement(newTag)._id);
+    }
+    await product.save();
+  }
+
+  console.log('Seeding products successful');
+
+  /**
+   * * SEEDING USERS
+   */
+  console.log('Seeding users...');
+
+  const newUser = await User.create(generateUser(25));
+
+  for (let user of newUser) {
+    // attach products to user favorites
+    const numberOfFavorites = Math.floor(Math.random() * 5);
+    user.favorites = [];
+    for (let i = 0; i < numberOfFavorites; i++) {
+      user.favorites.push(randomElement(newProduct)._id);
+    }
+
+    // attach products to user cart
+    const numberInCart = Math.floor(Math.random() * 5);
+    user.cart.products = [];
+    for (let i = 0; i < numberInCart; i++) {
+      const randomProduct = randomElement(newProduct);
+      user.cart.products.push({
+        product: randomProduct._id,
+        price: randomProduct.price,
+        qty: Math.ceil(Math.random() * 3),
+      });
+    }
+
+    await user.save();
+  }
+
+  console.log('Seeding users successful');
+
+  /**
+   * * SEEDING ORDERS
+   */
+
+  console.log('Seeding orders... ');
+
+  const newOrder = await Order.create(generateOrder(20));
+
+  console.log('Seeding orders successful');
 
   /**
    * * SEEDING REVIEWS

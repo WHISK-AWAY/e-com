@@ -2,7 +2,7 @@ import mongoose, { Schema, Types } from 'mongoose';
 import { faker } from '@faker-js/faker';
 import { User } from '../database/User';
 import { Product } from '../database/Product';
-import { Tag } from '../database/Tag';
+import { ITag } from '../database/Tag';
 import { Order } from '../database/Order';
 import { Promo } from '../database/Promo';
 import { Review } from '../database/Review';
@@ -34,10 +34,8 @@ export const generateUser = (count: number): User[] => {
     const cart = {
       products: [
         {
-          product: {
-            product: new Types.ObjectId(),
-            price: faker.datatype.float({ min: 1, max: 100, precision: 0.01 }),
-          },
+          product: new Types.ObjectId(), // ! real products here
+          price: faker.datatype.float({ min: 1, max: 100, precision: 0.01 }),
           // price: faker.datatype.float({ min: 1, max: 100, precision: 0.01 }),
           qty: faker.datatype.number(2),
         },
@@ -48,8 +46,8 @@ export const generateUser = (count: number): User[] => {
       | 'user'
       | 'guest';
 
-    const reviewCount = faker.datatype.number({ min: 0, max: 15 });
-    const voteCount = faker.datatype.number({ min: 0, max: 15 });
+    const reviewCount = faker.datatype.number({ min: 0, max: 15 }); // * handle this thru adding actual reviews + hook incrementer
+    const voteCount = faker.datatype.number({ min: 0, max: 15 }); // * handle this thru adding actual reviews + hook incrementer
     const skinConcerns = faker.helpers.arrayElements([
       'oily skin',
       'aging skin',
@@ -93,7 +91,7 @@ export const generateProduct = (count: number): Product[] => {
     const price = faker.datatype.float({ min: 20, max: 1000, precision: 0.01 });
     const qty = faker.datatype.number({ min: 1, max: 5 });
     const imageURL = faker.image.cats();
-    const tags = [new Types.ObjectId()];
+    const tags = [new Types.ObjectId()]; // ! real tags here
 
     products.push({
       productName,
@@ -113,7 +111,7 @@ export const generateProduct = (count: number): Product[] => {
  * * TAG
  */
 
-export const generateTag = (count: number): Tag[] => {
+export const generateTag = (count: number): ITag[] => {
   const tags = [];
 
   for (let i = 0; i < count; i++) {
@@ -133,15 +131,16 @@ export const generateOrder = (count: number): Order[] => {
 
   for (let i = 0; i < count; i++) {
     const orderDetails = {
+      // ! make this an array & pull from real products
       productName: faker.commerce.productName(),
       productDesc: faker.commerce.productDescription(),
       brand: faker.company.name(),
       imageURL: faker.image.cats(),
       price: faker.datatype.float({ min: 20, max: 1000, precision: 0.01 }),
-      qty: faker.datatype.number({ min: 1, max: 5 }),
+      qty: faker.datatype.number({ min: 1, max: 5 }), // * arbitrary / random
     };
     const user = {
-      userId: new mongoose.Types.ObjectId(),
+      userId: new mongoose.Types.ObjectId(), // ! pull at least some of these from real users (not necessarily all -- simulate guest purchases...userId should be nullable)
       shippingInfo: {
         firstName: faker.name.firstName(),
         lastName: faker.name.lastName(),
@@ -159,7 +158,7 @@ export const generateOrder = (count: number): Order[] => {
         cvv: faker.finance.creditCardCVV(),
       },
     };
-    const promoCode = faker.random.word();
+    const promoCode = faker.random.word(); // ! pull from real promos
     const date = faker.date.recent(20);
     const orderStatus = faker.helpers.arrayElement([
       'pending',
@@ -208,9 +207,11 @@ export const generatePromo = (count: number): Promo[] => {
  */
 
 export const generateReview = (count: number): Review[] => {
+  // ! needs to refer to product + user
   const reviews = [];
 
   for (let i = 0; i < count; i++) {
+    const product = new mongoose.Types.ObjectId();
     const title = faker.word.conjunction();
     const content = faker.lorem.sentence();
     const date = faker.date.recent();
@@ -219,15 +220,18 @@ export const generateReview = (count: number): Review[] => {
       quality: faker.datatype.number({ min: 1, max: 5 }),
       value: faker.datatype.number({ min: 1, max: 5 }),
     };
+    const user = new mongoose.Types.ObjectId();
     const nickname = faker.internet.userName();
     const location = `${faker.address.cityName()},  ${faker.address.stateAbbr()}`;
     const upvote = faker.datatype.number({ min: 0, max: 14 });
 
     reviews.push({
+      product,
       title,
       content,
       date,
       rating,
+      user,
       nickname,
       location,
       upvote,

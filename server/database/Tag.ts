@@ -1,11 +1,11 @@
 import mongoose, { Schema, Types, model } from 'mongoose';
 
-export interface Tag {
+export interface ITag {
   _id?: Types.ObjectId;
   tagName: string;
 }
 
-const tagSchema = new Schema<Tag>({
+const tagSchema = new Schema<ITag>({
   tagName: { type: String, required: true, unique: true },
 });
 

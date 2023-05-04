@@ -2,7 +2,8 @@ import mongoose, { Schema, Types } from 'mongoose';
 
 export interface Cart {
   products?: {
-    product: { product: Types.ObjectId; price: number };
+    product: Types.ObjectId;
+    price: number;
     qty: number;
   }[];
   subtotal?(): number;
@@ -12,9 +13,8 @@ const cartSchema = new Schema<Cart>(
   {
     products: [
       {
-        product: {
-          product: { type: mongoose.SchemaTypes.ObjectId, ref: 'Product' },
-        },
+        product: { type: mongoose.SchemaTypes.ObjectId, ref: 'Product' },
+        price: Number,
         qty: Number,
       },
     ],
