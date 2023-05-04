@@ -4,10 +4,10 @@ const MONGO_DB_URL = process.env.MONGO_DB_URL!;
 import mongoose, { Types, model } from 'mongoose';
 import {
   generateUser,
-  generateProduct,
+  generateProduct, // hi buddy!
   generateTag,
   generateOrder,
-  generatePromo,
+  generatePromo, //OMGGG
   generateReview,
 } from './faker/mock-data';
 import User from './database/User';
