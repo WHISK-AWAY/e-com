@@ -9,7 +9,7 @@ export interface Order {
     imageURL: string;
     price: number;
     qty: number;
-  };
+  }[];
 
   user: {
     _id?: Types.ObjectId;
@@ -37,14 +37,14 @@ export interface Order {
 }
 
 const orderSchema = new Schema<Order>({
-  orderDetails: {
+  orderDetails: [{
     productName: { type: String, required: true },
     productDesc: { type: String, required: true },
     brand: { type: String, required: true },
     imageURL: { type: String, required: true },
     price: { type: Number, required: true },
     qty: { type: Number, required: true },
-  },
+  }],
   user: {
     userId: { type: mongoose.SchemaTypes.ObjectId, ref: 'User' },
     shippingInfo: {

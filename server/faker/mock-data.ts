@@ -139,7 +139,7 @@ export const generateOrder = (count: number): Order[] => {
   const orders = [];
 
   for (let i = 0; i < count; i++) {
-    const orderDetails = {
+    const orderDetails = [{
       // ! make this an array & pull from real products
       productName: faker.commerce.productName(),
       productDesc: faker.commerce.productDescription(),
@@ -147,7 +147,7 @@ export const generateOrder = (count: number): Order[] => {
       imageURL: faker.image.cats(),
       price: faker.datatype.float({ min: 20, max: 1000, precision: 0.01 }),
       qty: faker.datatype.number({ min: 1, max: 5 }), // * arbitrary / random
-    };
+    }];
     const user = {
       userId: new mongoose.Types.ObjectId(), // ! pull at least some of these from real users (not necessarily all -- simulate guest purchases...userId should be nullable)
       shippingInfo: {

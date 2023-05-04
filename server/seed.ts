@@ -118,6 +118,51 @@ export async function seed() {
 
   const newOrder = await Order.create(generateOrder(20));
 
+  // iterate over each order & modify for products & user
+  for (let order of newOrder) {
+    
+    const orderUser = randomElement(newUser);
+    order.user._id = orderUser._id;
+    order.user.shippingInfo = {
+      firstName: orderUser.firstName,
+      lastName: orderUser.lastName,
+      email: orderUser.email,
+      address_1: orderUser.address.address_1,
+      address_2: orderUser.address.address_2,
+      city: orderUser.address.city,
+      state: orderUser.address.state,
+      zip: orderUser.address.zip
+    }
+
+    // bring in 1 to 5 products
+    const numberOfProducts = Math.ceil(Math.random() * 5)
+    order.orderDetails = []; // re-initialize order details & repopulate with "real" products
+
+    for (let i = 0; i < numberOfProducts; i++) {
+      const productQty = Math.ceil(Math.random() * 3);
+      const randomProduct = randomElement(newProduct);
+
+      const orderProduct = {
+        productName: randomProduct.productName,
+      productDesc: randomProduct.productDesc,
+      brand: randomProduct.brand,
+      imageURL: randomProduct.imageURL,
+      price: randomProduct.price,
+      qty: productQty
+    }
+
+      order.orderDetails.push(orderProduct)
+    }
+    
+    // promo code, sometimes
+    order.promoCode = '';
+    if (Math.random() <= 0.20) {
+      order.promoCode = randomElement(newPromo).promoCodeName;
+    }
+
+    await order.save()
+  }
+
   console.log('Seeding orders successful');
 
   /**
