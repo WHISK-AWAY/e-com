@@ -126,7 +126,39 @@ export async function seed() {
 
   console.log('Seeding reviews...');
 
-  const newReview = await Review.create(generateReview(50));
+  const newReview = await Review.create(generateReview(50)); // generate a bunch of reviews
+
+  for (let user of newUser) { // iterate over each individual user
+    // decide how many reviews this user leaves
+    const numberOfReviews = Math.floor(Math.random() * 3);
+
+    // iterate through the number we came up with
+    for(let i = 0; i <= numberOfReviews; i++) {
+      const currentReview = newReview.pop(); // take one review off the list of pre-generated reviews
+      console.log('currentReview:', currentReview)
+
+      if (!currentReview) break; // just a little TS guard
+
+      currentReview.user = user._id; // <-- assigns current user as this review's author
+      currentReview.nickname = user.firstName;
+      currentReview.location = `${user.address.city}, ${user.address.state}`
+
+      const reviewProduct = randomElement(newProduct);
+      currentReview.product = reviewProduct._id
+      
+      await currentReview.save();
+    }
+      // pick a review off the list to work with X
+      // modify the selected review to attach current user ID & information
+      
+      // decide which product this review is for
+      // modify the selecte review to attach product ID & information
+
+      // save the review
+  }
+
+  const checkReview = await Review.findOne().populate(['user', 'product ']);
+  console.log('Check review:', checkReview);
 
   console.log('Seeding review successful');
 
