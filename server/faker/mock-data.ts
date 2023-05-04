@@ -7,6 +7,15 @@ import { Order } from '../database/Order';
 import { Promo } from '../database/Promo';
 import { Review } from '../database/Review';
 
+const SKIN_CONDITIONS = [
+  'oily skin',
+  'aging skin',
+  'acne prone skin',
+  'normal skin',
+  'dry skin',
+  'sensitive skin',
+]
+
 /**
  * *USER
  */
@@ -50,14 +59,7 @@ export const generateUser = (count: number): User[] => {
 
     const reviewCount = faker.datatype.number({ min: 0, max: 15 });
     const voteCount = faker.datatype.number({ min: 0, max: 15 });
-    const skinConcerns = faker.helpers.arrayElements([
-      'oily skin',
-      'aging skin',
-      'acne prone skin',
-      'normal skin',
-      'dry skin',
-      'sensitive skin',
-    ]);
+    const skinConcerns = faker.helpers.arrayElements(SKIN_CONDITIONS); 
 
     users.push({
       firstName,
@@ -235,6 +237,9 @@ export const generateReview = (count: number): Review[] => {
   }
   return reviews;
 };
+
+
+
 
 // const mockProducts = generateProduct(100);
 // console.dir(mockProducts, { depth: 10 });
