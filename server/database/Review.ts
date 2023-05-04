@@ -11,26 +11,22 @@ export interface Review {
   };
   nickname?: string;
   location?: string;
-  verifiedPurchase(): boolean;
-  vote?: number;
+  // verifiedPurchase(): boolean;
+  upvote?: number;
 }
 
-
 const reviewSchema = new Schema<Review>({
-  title: {type: String, required: true},
-  content: { type: String, required: true},
-  date: { type: Date, required: true, default: Date.now},
+  title: { type: String, required: true },
+  content: { type: String, required: true },
+  date: { type: Date, required: true, default: Date.now },
   rating: {
-    overall: { type: Number, required: true},
-    quality: { type: Number, required: true},
-    value: { type: Number, required: true},
+    overall: { type: Number, required: true },
+    quality: { type: Number, required: true },
+    value: { type: Number, required: true },
   },
   nickname: String,
   location: String,
-  vote: Number
+  upvote: Number,
 });
 
-
-// reviewSchema.virtual('verifiedPurchase').get() {
-
-// }
+export default mongoose.model('Review', reviewSchema);
