@@ -32,7 +32,10 @@ export interface IOrder {
       cvv: string;
     };
   };
-  promoCode?: string;
+  promoCode?: {
+    promoCodeName: string;
+    promoCodeRate: number;
+  };
   orderStatus: 'confirmed' | 'pending' | 'canceled';
   date: Date;
   subtotal?: number;
@@ -71,7 +74,10 @@ const orderSchema = new Schema<IOrder>(
         cvv: String,
       },
     },
-    promoCode: String,
+    promoCode: {
+      promoCodeName: String,
+      promoCodeRate: Number,
+    },
     date: { type: Date, default: Date.now },
     orderStatus: { type: String, requires: true },
   },
@@ -84,26 +90,18 @@ orderSchema.virtual('subtotal').get(function () {
     tot += prod.price * prod.qty;
   }
 
-  return tot;
+  return +tot.toFixed(2);
 });
 
-orderSchema
-  .virtual('total', {
-    ref: 'Promo',
-    localField: 'promoCode',
-    foreignField: 'promoCodeName',
-    justOne: true,
-  })
-  .get(function (this: IOrder) {
-    let tot = this.subtotal || 0;
-    // console.log(JSON.stringify(this.promoCode.promoRate));
+orderSchema.virtual('total').get(function (this: IOrder) {
+  let tot = this.subtotal || 0;
 
-    // if (this.promoCode) {
-    //   if (this.promoCode.promoRate) tot = tot * (1 - this.promoCode.promoRate);
-    // }
-
-    return tot;
-  });
+  if (this.promoCode) {
+    if (this.promoCode.promoCodeRate)
+      tot = tot * (1 - this.promoCode.promoCodeRate);
+  }
+  return +tot.toFixed(2);
+});
 
 export default mongoose.model('Order', orderSchema);
 
