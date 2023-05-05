@@ -169,7 +169,10 @@ export const generateOrder = (count: number): IOrder[] => {
         cvv: faker.finance.creditCardCVV(),
       },
     };
-    const promoCode = faker.random.word(); // ! pull from real promos
+    const promoCode = {
+      promoCodeName: faker.random.word(), // ! pull from real promos
+      promoCodeRate: faker.datatype.number({min: .01, max: .2, precision: 0.01})
+    } 
     const date = faker.date.recent(20);
     const orderStatus = faker.helpers.arrayElement([
       'pending',
