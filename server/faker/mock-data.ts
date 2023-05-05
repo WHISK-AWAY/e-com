@@ -5,9 +5,9 @@ import { Product } from '../database/Product';
 import { ITag } from '../database/Tag';
 import { IOrder } from '../database/Order';
 import { IPromo } from '../database/Promo';
-import { Review } from '../database/Review';
+import { Review } from '../database/Review'; //you killed tippy toes :( idk what you're talking about
 
-const SKIN_CONDITIONS = [
+const SKIN_CONCERNS = [
   'oily skin',
   'aging skin',
   'acne prone skin',
@@ -57,14 +57,7 @@ export const generateUser = (count: number): User[] => {
 
     const reviewCount = faker.datatype.number({ min: 0, max: 15 }); // * handle this thru adding actual reviews + hook incrementer
     const voteCount = faker.datatype.number({ min: 0, max: 15 }); // * handle this thru adding actual reviews + hook incrementer
-    const skinConcerns = faker.helpers.arrayElements([
-      'oily skin',
-      'aging skin',
-      'acne prone skin',
-      'normal skin',
-      'dry skin',
-      'sensitive skin',
-    ]);
+    const skinConcerns = faker.helpers.arrayElements(SKIN_CONCERNS);
 
     users.push({
       firstName,

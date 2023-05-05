@@ -4,3 +4,4 @@ export { default as Product } from './Product';
 export { default as Review } from './Review';
 export { default as Tag } from './Tag';
 export { default as User } from './User';
+export { default as UserVote } from './UserVote';
