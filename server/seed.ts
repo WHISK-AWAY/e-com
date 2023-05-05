@@ -142,6 +142,7 @@ export async function seed() {
       const randomProduct = randomElement(newProduct);
 
       const orderProduct = {
+        productId: randomProduct._id,
         productName: randomProduct.productName,
         productDesc: randomProduct.productDesc,
         brand: randomProduct.brand,
@@ -202,12 +203,26 @@ export async function seed() {
   }
 
   const checkReview = await Review.findOne().populate(['user', 'product ']);
+
   // console.log('Check review:', checkReview);
 
   console.log('Seeding review successful');
   const oneOrder = await Order.findOne();
-  console.log('OneOrder total:', oneOrder?.total);
-  console.log('OneOrder subtotal:', oneOrder?.subtotal);
+  oneOrder!.orderStatus = 'confirmed';
+  await oneOrder?.save()
+  const newReview1 = await Review.create({
+    product: oneOrder?.orderDetails[0].productId,
+    title: 'title',
+    content: 'content',
+    rating: {overall: 2, quality: 2, value: 2},
+    user: oneOrder?.user.userId,
+    nickname: 'nick',
+
+  });
+
+  // console.log('newReview1', newReview1);
+  // console.log('OneOrder :', oneOrder);
+  // console.log('OneOrder subtotal:', oneOrder?.subtotal);
 
   await mongoose.disconnect();
 }
