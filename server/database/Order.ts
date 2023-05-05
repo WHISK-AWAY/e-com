@@ -83,7 +83,7 @@ const orderSchema = new Schema<IOrder>(
     date: { type: Date, default: Date.now },
     orderStatus: { type: String, requires: true },
   },
-  { toJSON: { virtuals: true } }
+  { toJSON: { virtuals: true }, toObject: { virtuals: true } }
 );
 
 orderSchema.virtual('subtotal').get(function () {
@@ -95,8 +95,8 @@ orderSchema.virtual('subtotal').get(function () {
   return +tot.toFixed(2);
 });
 
-orderSchema.virtual('total').get(function (this: IOrder) {
-  let tot = this.subtotal || 0;
+orderSchema.virtual('total').get(function () {
+  let tot: number = this.subtotal || 0;
 
   if (this.promoCode) {
     if (this.promoCode.promoCodeRate)
