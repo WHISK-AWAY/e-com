@@ -1,5 +1,6 @@
 import mongoose, { Schema, Types } from 'mongoose';
 import User from './User';
+import Order from './Order';
 
 export interface Review {
   product: Types.ObjectId;
@@ -14,8 +15,9 @@ export interface Review {
   user: Types.ObjectId;
   nickname?: string;
   location?: string;
-  // verifiedPurchase(): boolean;
+  verifiedPurchase?: boolean;
   upvote?: number;
+  downvote?: number;
 }
 
 const reviewSchema = new Schema<Review>({
@@ -31,13 +33,28 @@ const reviewSchema = new Schema<Review>({
   user: { type: mongoose.SchemaTypes.ObjectId, ref: 'User' },
   nickname: String,
   location: String,
+  verifiedPurchase: Boolean,
   upvote: Number,
+  downvote: Number,
 });
 
-reviewSchema.pre('save', function (next) {
-  // console.log('document.isNew:', this.isNew);
-  // console.log('title:', this.title);
+reviewSchema.pre('save', async function (next) {
   if (!this.isNew) return next();
+
+
+  const order = await Order.findOne({
+    'user.userId': this.user,
+    'orderDetails.productId': { $eq: this.product }, 'orderStatus': {$eq: 'confirmed'}
+  }).exec();
+
+  if (order && order.orderStatus === 'confirmed') {
+    this.verifiedPurchase = true;
+  }
+  console.log('order', order);
+  // console.log('suer', this.user);
+  // console.log('product', this.product);
+
+  // console.log('order', order);
 
   next();
 });
