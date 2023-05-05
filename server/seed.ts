@@ -154,9 +154,9 @@ export async function seed() {
     }
 
     // promo code, sometimes
-    order.promoCode = '';
+    order.promoCode!.promoCodeName = '';
     // if (Math.random() <= 0.2) {
-    order.promoCode = randomElement(newPromo).promoCodeName;
+    order.promoCode!.promoCodeName = randomElement(newPromo).promoCodeName;
     // }
     await order.save();
   }
@@ -179,7 +179,7 @@ export async function seed() {
     // iterate through the number we came up with
     for (let i = 0; i <= numberOfReviews; i++) {
       const currentReview = newReview.pop(); // take one review off the list of pre-generated reviews
-      console.log('currentReview:', currentReview);
+      // console.log('currentReview:', currentReview);
 
       if (!currentReview) break; // just a little TS guard
 
@@ -202,9 +202,12 @@ export async function seed() {
   }
 
   const checkReview = await Review.findOne().populate(['user', 'product ']);
-  console.log('Check review:', checkReview);
+  // console.log('Check review:', checkReview);
 
   console.log('Seeding review successful');
+  const oneOrder = await Order.findOne();
+  console.log('OneOrder total:', oneOrder?.total);
+  console.log('OneOrder subtotal:', oneOrder?.subtotal);
 
   await mongoose.disconnect();
 }
