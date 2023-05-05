@@ -59,17 +59,17 @@ reviewSchema.pre('save', async function (next) {
   next();
 });
 
-// reviewSchema.post('save', async function (doc, next) {
-//   // console.log('post-save "this":', this);
-//   const author = await User.findById(doc.user);
+reviewSchema.post('save', async function (doc, next) {
+  // console.log('post-save "this":', this);
+  const author = await User.findById(doc.user);
 
-//   if (!author) return next();
+  if (!author) return next();
 
-//   if (author.reviewCount) {
-//     author.reviewCount += 1;
-//   } else author.reviewCount = 1;
+  if (author.reviewCount) {
+    author.reviewCount += 1;
+  } else author.reviewCount = 1;
 
-//   next();
-// });
+  next();
+});
 
 export default mongoose.model('Review', reviewSchema);
