@@ -4,6 +4,7 @@ import Promo, { IPromo } from './Promo';
 export interface IOrder {
   _id?: Types.ObjectId;
   orderDetails: {
+    productId: Types.ObjectId;
     productName: string;
     productDesc: string;
     brand: string;
@@ -46,6 +47,7 @@ const orderSchema = new Schema<IOrder>(
   {
     orderDetails: [
       {
+        productId: { type: Schema.Types.ObjectId, ref: 'Product' },
         productName: { type: String, required: true },
         productDesc: { type: String, required: true },
         brand: { type: String, required: true },
