@@ -10,12 +10,13 @@ import {
   generatePromo, //OMGGG
   generateReview,
 } from './faker/mock-data';
-import Tag from './database/Tag'; // * no dependencies
-import Promo from './database/Promo'; // * no dependencies
-import Product from './database/Product'; // dependent on Tag
-import User from './database/User'; // dependent on Product
-import Order from './database/Order'; // dependent on Product, User, Promo
-import Review from './database/Review'; // dependent on Product, User
+// import Tag from './database/Tag'; // * no dependencies
+// import Promo from './database/Promo'; // * no dependencies
+// import Product from './database/Product'; // dependent on Tag
+// import User from './database/User'; // dependent on Product
+// import Order, { IOrder } from './database/Order'; // dependent on Product, User, Promo
+// import Review from './database/Review'; // dependent on Product, User
+import { Tag, Promo, Product, User, Order, Review } from './database/index';
 
 function randomElement<T>(inputArr: T[]): T {
   const i = Math.floor(Math.random() * inputArr.length);
@@ -172,57 +173,53 @@ export async function seed() {
 
   const newReview = await Review.create(generateReview(50)); // generate a bunch of reviews
 
+  // iterate over each individual user
   for (let user of newUser) {
-    // iterate over each individual user
     // decide how many reviews this user leaves
     const numberOfReviews = Math.floor(Math.random() * 3);
 
-    // iterate through the number we came up with
+    // iterate through that number
     for (let i = 0; i <= numberOfReviews; i++) {
-      const currentReview = newReview.pop(); // take one review off the list of pre-generated reviews
-      // console.log('currentReview:', currentReview);
+      // take one review off the list of pre-generated reviews
+      const currentReview = newReview.pop();
+      // guard to guarantee we haven't run out of reviews to work with
+      if (!currentReview) break;
 
-      if (!currentReview) break; // just a little TS guard
-
-      currentReview.user = user._id; // <-- assigns current user as this review's author
+      // assign current user as this review's author
+      currentReview.user = user._id;
       currentReview.nickname = user.firstName;
       currentReview.location = `${user.address.city}, ${user.address.state}`;
 
+      // choose a random product from the array of seeded products
       const reviewProduct = randomElement(newProduct);
+      // assign the product as the subject of this review
       currentReview.product = reviewProduct._id;
 
       await currentReview.save();
     }
-    // pick a review off the list to work with X
-    // modify the selected review to attach current user ID & information
-
-    // decide which product this review is for
-    // modify the selecte review to attach product ID & information
-
-    // save the review
   }
 
-  const checkReview = await Review.findOne().populate(['user', 'product ']);
+  // const checkReview = await Review.findOne().populate(['user', 'product ']);
 
   // console.log('Check review:', checkReview);
 
   console.log('Seeding review successful');
   const oneOrder = await Order.findOne();
   oneOrder!.orderStatus = 'confirmed';
-  await oneOrder?.save()
+  await oneOrder?.save();
   const newReview1 = await Review.create({
     product: oneOrder?.orderDetails[0].productId,
     title: 'title',
     content: 'content',
-    rating: {overall: 2, quality: 2, value: 2},
+    rating: { overall: 2, quality: 2, value: 2 },
     user: oneOrder?.user.userId,
     nickname: 'nick',
-
+    location: 'here',
   });
 
-  // console.log('newReview1', newReview1);
-  // console.log('OneOrder :', oneOrder);
-  // console.log('OneOrder subtotal:', oneOrder?.subtotal);
+  await newReview1.populate(['product', 'user']);
+  console.log('Review:', JSON.parse(JSON.stringify(newReview1)));
+  console.log('Order:', JSON.parse(JSON.stringify(oneOrder)));
 
   await mongoose.disconnect();
 }
