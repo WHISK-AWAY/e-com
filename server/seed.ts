@@ -60,7 +60,7 @@ export async function seed() {
   // newProduct.push(...(await Product.create(generateProduct(20))));
   // newProduct.push(...(await Product.create(generateProduct(20))));
   // newProduct.push(...(await Product.create(generateProduct(20))));
-  const newProduct = await Product.insertMany(generateProduct(100));
+  const newProduct = await Product.insertMany(generateProduct(10));
 
   // attach tags to products
   for (let product of newProduct) {
