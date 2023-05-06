@@ -104,7 +104,7 @@ export interface IUser {
     zip: string;
   };
   favorites?: Types.ObjectId[];
-  cart: ICart;
+  cart?: ICart;
   role: 'admin' | 'user' | 'guest';
   reviewCount?: number;
   voteCount?: number;
@@ -142,9 +142,8 @@ const userSchema = new Schema<IUser>({
 });
 
 userSchema.pre('validate', async function (next) {
-    // if(this.password.length > 20 || this.password.length < 8) throw new Error('Do not meet max password length requirement')
-    this.password = await bcrypt.hash(this.password, +SALT_ROUNDS!);
-  
+  // if(this.password.length > 20 || this.password.length < 8) throw new Error('Do not meet max password length requirement')
+  this.password = await bcrypt.hash(this.password, +SALT_ROUNDS!);
 });
 
 export default mongoose.model('User', userSchema);
