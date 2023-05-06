@@ -1,7 +1,7 @@
 import mongoose, { Schema, Types } from 'mongoose';
 import { faker } from '@faker-js/faker';
-import { User } from '../database/User';
-import { Product } from '../database/Product';
+import { IUser } from '../database/User';
+import { IProduct } from '../database/Product';
 import { ITag } from '../database/Tag';
 import { IOrder } from '../database/Order';
 import { IPromo } from '../database/Promo';
@@ -20,8 +20,8 @@ const SKIN_CONCERNS = [
  * *USER
  */
 
-export const generateUser = (count: number): User[] => {
-  const users: User[] = [];
+export const generateUser = (count: number): IUser[] => {
+  const users: IUser[] = [];
 
   for (let i = 0; i < count; i++) {
     const firstName = faker.name.firstName();
@@ -57,7 +57,7 @@ export const generateUser = (count: number): User[] => {
 
     const reviewCount = faker.datatype.number({ min: 0, max: 15 }); // * handle this thru adding actual reviews + hook incrementer
     const voteCount = faker.datatype.number({ min: 0, max: 15 }); // * handle this thru adding actual reviews + hook incrementer
-    const skinConcerns = faker.helpers.arrayElements(SKIN_CONCERNS);
+    const skinConcerns = faker.helpers.arrayElements(SKIN_CONCERNS, 2);
 
     users.push({
       firstName,
@@ -83,7 +83,7 @@ export const generateUser = (count: number): User[] => {
  * * PRODUCT
  */
 
-export const generateProduct = (count: number): Product[] => {
+export const generateProduct = (count: number): IProduct[] => {
   const products = [];
 
   for (let i = 0; i < count; i++) {
@@ -91,7 +91,7 @@ export const generateProduct = (count: number): Product[] => {
     const productDesc = faker.commerce.productDescription();
     const brand = faker.company.name();
     const price = faker.datatype.float({ min: 20, max: 1000, precision: 0.01 });
-    const qty = faker.datatype.number({ min: 1, max: 5 });
+    const qty = faker.datatype.number({ min: 4, max: 20 });
     const imageURL = faker.image.cats();
     const tags = [new Types.ObjectId()];
 
