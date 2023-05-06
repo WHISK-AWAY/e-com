@@ -1,15 +1,20 @@
 import mongoose, { Schema, Types } from 'mongoose';
+import Product, { IProduct } from './Product';
+import { urlToHttpOptions } from 'url';
 
-export interface Cart {
-  products?: {
-    product: Types.ObjectId;
-    price: number;
-    qty: number;
-  }[];
+type TProduct = {
+  product: Types.ObjectId;
+  price: number;
+  qty: number;
+};
+
+export interface ICart {
+  products?: TProduct[];
   subtotal?(): number;
+  addProduct?(productId: mongoose.Types.ObjectId, qty: number): void;
 }
 
-const cartSchema = new Schema<Cart>(
+const cartSchema = new Schema<ICart>(
   {
     products: [
       {
@@ -19,25 +24,70 @@ const cartSchema = new Schema<Cart>(
       },
     ],
   },
-  {
-    // virtuals: {
-    //   subtotal: {
-    //     get(this: Cart) {
-    //       const productSubtotal = this?.products?.reduce(
-    //         (accum: number, product) => {
-    //           return accum + product?.price! * product?.qty;
-    //         },
-    //         0
-    //       );
-    //       return productSubtotal;
-    //     },
-    //     ref: 'Product',
-    //   },
-    // },
-  }
+  { toJSON: { virtuals: true }, toObject: { virtuals: true } }
 );
 
-export interface User {
+// TODO: remove product
+// TODO: clear cart
+
+cartSchema.methods.addProduct = async function (
+  productId: Types.ObjectId,
+  qty: number
+): Promise<void> {
+  // look up the product by id
+  // compare add qty to qty available on product doc
+  // if we're trying to add too many --- add only as many as we have, and notify (?)
+  if (!qty || qty < 1) return;
+
+  const prod = await Product.findById(productId);
+  if (!prod) return;
+
+  if (!this.products || this.products.length === 0) {
+    // if cart has no products, initialize it as an empty array so we're safe to push into it later
+    this.products = [];
+  }
+
+  const addToCart = {
+    product: prod.id,
+    price: prod.price,
+    qty: Math.min(prod.qty, qty), // lesser of requested & available
+  };
+
+  const existingProducts: Types.ObjectId[] = this.products.map(
+    (prod: TProduct) => prod.product.toString()
+  );
+
+  if (existingProducts.includes(productId)) {
+    // cart already includes product
+    for (let prod of this.products) {
+      if (prod.product.toString() === productId) {
+        prod.qty += addToCart.qty;
+        break;
+      }
+    }
+  } else {
+    // cart doesn't already include product
+    this.products.push(addToCart);
+  }
+
+  await prod.updateOne({ $inc: { qty: -addToCart.qty } }).exec();
+
+  return;
+};
+
+cartSchema.virtual('subtotal').get(function (this: ICart) {
+  let tot = 0;
+
+  if (!this.products) return tot;
+
+  for (let prod of this.products) {
+    tot += prod.price * prod.qty;
+  }
+
+  return tot;
+});
+
+export interface IUser {
   firstName: string;
   lastName: string;
   email: string;
@@ -50,14 +100,14 @@ export interface User {
     zip: string;
   };
   favorites?: Types.ObjectId[];
-  cart: Cart;
+  cart: ICart;
   role: 'admin' | 'user' | 'guest';
   reviewCount?: number;
   voteCount?: number;
   skinConcerns?: string[];
 }
 
-const userSchema = new Schema<User>({
+const userSchema = new Schema<IUser>({
   firstName: { type: String, required: true, minLength: 2 },
   lastName: { type: String, required: true },
   email: { type: String, required: true, unique: true, lowercase: true },
@@ -86,59 +136,5 @@ const userSchema = new Schema<User>({
   voteCount: Number,
   skinConcerns: [String],
 });
-
-// const generateUser = (count: number): User[] => {
-//   const users: User[] = [];
-
-//   for (let i = 0; i < count; i++) {
-//     const firstName = faker.name.firstName();
-//     const lastName = faker.name.lastName();
-//     const email = faker.internet.email(firstName, lastName);
-//     const password = faker.internet.password(8);
-//     const address = {
-//       address_1: faker.address.streetAddress(),
-//       address_2: faker.address.secondaryAddress(),
-//       city: faker.address.city(),
-//       state: faker.address.stateAbbr(),
-//       zip: faker.address.zipCode(),
-//     };
-//     const favorites = [
-//       new Types.ObjectId(),
-//       new Types.ObjectId(),
-//       new Types.ObjectId(),
-//     ];
-//     const cart = {
-//       products: [
-//         {
-//           product: {
-//             product: new Types.ObjectId(),
-//             price: faker.datatype.float({ min: 1, max: 100, precision: 0.01 }),
-//           },
-//           // price: faker.datatype.float({ min: 1, max: 100, precision: 0.01 }),
-//           qty: faker.datatype.number(2),
-//         },
-//       ],
-//     };
-//     const role = faker.helpers.arrayElement(['admin', 'user', 'guest']) as
-//       | 'admin'
-//       | 'user'
-//       | 'guest';
-
-//     users.push({
-//       firstName,
-//       lastName,
-//       email,
-//       password,
-//       address,
-//       favorites,
-//       cart,
-//       role,
-//     });
-//   }
-//   return users;
-// };
-
-// const mockUsers = generateUser(25);
-// console.dir(mockUsers, {depth: 10});
 
 export default mongoose.model('User', userSchema);
