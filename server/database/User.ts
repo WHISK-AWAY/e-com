@@ -15,7 +15,7 @@ export interface ICart {
   products: TProduct[];
   subtotal?(): number;
   addProduct?(productId: mongoose.Types.ObjectId, qty: number): void;
-  clearCart?(restock?: boolean): void;
+  clearCart?(options?: { restock: boolean }): void;
 }
 
 const cartSchema = new Schema<ICart>(
@@ -32,16 +32,16 @@ const cartSchema = new Schema<ICart>(
 );
 
 // TODO: remove product
-// TODO: clear cart
+// TODO: clear cart (done!)
 
 /**
  * Clear user cart of items
  * @param restock If true, add cart quantities back to inventory items. Default false.
  */
 cartSchema.methods.clearCart = async function (
-  restock: boolean = false
+  options: { restock: boolean } = { restock: false }
 ): Promise<void> {
-  if (restock) {
+  if (options.restock) {
     const cartProducts = this.products;
     while (cartProducts.length) {
       const prod = cartProducts.pop();
