@@ -32,11 +32,9 @@ const cartSchema = new Schema<ICart>(
 );
 
 // TODO: remove product
-// TODO: clear cart (done!)
 
 /**
  * Clear user cart of items
- * @param restock If true, add cart quantities back to inventory items. Default false.
  */
 cartSchema.methods.clearCart = async function (
   options: { restock: boolean } = { restock: false }
