@@ -1,6 +1,5 @@
 import mongoose, { Schema, Types } from 'mongoose';
 import Product, { IProduct } from './Product';
-import { urlToHttpOptions } from 'url';
 import bcrypt from 'bcrypt';
 import dotenv from 'dotenv';
 dotenv.config({ path: '../../.env ' });
@@ -13,9 +12,10 @@ type TProduct = {
 };
 
 export interface ICart {
-  products?: TProduct[];
+  products: TProduct[];
   subtotal?(): number;
   addProduct?(productId: mongoose.Types.ObjectId, qty: number): void;
+  clearCart?(restock?: boolean): void;
 }
 
 const cartSchema = new Schema<ICart>(
@@ -33,6 +33,25 @@ const cartSchema = new Schema<ICart>(
 
 // TODO: remove product
 // TODO: clear cart
+
+/**
+ * Clear user cart of items
+ * @param restock If true, add cart quantities back to inventory items. Default false.
+ */
+cartSchema.methods.clearCart = async function (
+  restock: boolean = false
+): Promise<void> {
+  if (restock) {
+    const cartProducts = this.products;
+    while (cartProducts.length) {
+      const prod = cartProducts.pop();
+      await Product.findByIdAndUpdate(prod.product, {
+        $inc: { qty: prod.qty },
+      });
+    }
+  }
+  await this.parent().updateOne({ $set: { 'cart.products': [] } });
+};
 
 cartSchema.methods.addProduct = async function (
   productId: Types.ObjectId,
