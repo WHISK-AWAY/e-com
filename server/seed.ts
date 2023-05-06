@@ -1,7 +1,7 @@
 import dotenv from 'dotenv';
 dotenv.config();
 const MONGO_DB_URL = process.env.MONGO_DB_URL!;
-import mongoose, { Types, model } from 'mongoose';
+import mongoose from 'mongoose';
 import {
   generateUser,
   generateProduct, // hi buddy!
@@ -10,12 +10,6 @@ import {
   generatePromo, //OMGGG
   generateReview,
 } from './faker/mock-data';
-// import Tag from './database/Tag'; // * no dependencies
-// import Promo from './database/Promo'; // * no dependencies
-// import Product from './database/Product'; // dependent on Tag
-// import User from './database/User'; // dependent on Product
-// import Order, { IOrder } from './database/Order'; // dependent on Product, User, Promo
-// import Review from './database/Review'; // dependent on Product, User
 import { Tag, Promo, Product, User, Order, Review } from './database/index';
 
 function randomElement<T>(inputArr: T[]): T {
@@ -61,11 +55,12 @@ export async function seed() {
 
   console.log('Seeding products...'); // * experiment with Product.insertMany() instead -- possibly more performant
 
-  const newProduct = await Product.create(generateProduct(20));
-  newProduct.push(...(await Product.create(generateProduct(20))));
-  newProduct.push(...(await Product.create(generateProduct(20))));
-  newProduct.push(...(await Product.create(generateProduct(20))));
-  newProduct.push(...(await Product.create(generateProduct(20))));
+  // const newProduct = await Product.create(generateProduct(20));
+  // newProduct.push(...(await Product.create(generateProduct(20))));
+  // newProduct.push(...(await Product.create(generateProduct(20))));
+  // newProduct.push(...(await Product.create(generateProduct(20))));
+  // newProduct.push(...(await Product.create(generateProduct(20))));
+  const newProduct = await Product.insertMany(generateProduct(100));
 
   // attach tags to products
   for (let product of newProduct) {
@@ -217,9 +212,9 @@ export async function seed() {
     location: 'here',
   });
 
-  await newReview1.populate(['product', 'user']);
-  console.log('Review:', JSON.parse(JSON.stringify(newReview1)));
-  console.log('Order:', JSON.parse(JSON.stringify(oneOrder)));
+  // await newReview1.populate(['product', 'user']);
+  // console.log('Review:', JSON.parse(JSON.stringify(newReview1)));
+  // console.log('Order:', JSON.parse(JSON.stringify(oneOrder)));
 
   await mongoose.disconnect();
 }
