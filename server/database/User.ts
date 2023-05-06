@@ -1,6 +1,10 @@
 import mongoose, { Schema, Types } from 'mongoose';
 import Product, { IProduct } from './Product';
 import { urlToHttpOptions } from 'url';
+import bcrypt from 'bcrypt';
+import dotenv from 'dotenv';
+dotenv.config({ path: '../../.env ' });
+const SALT_ROUNDS = process.env.SALT_ROUNDS || 10;
 
 type TProduct = {
   product: Types.ObjectId;
@@ -111,7 +115,7 @@ const userSchema = new Schema<IUser>({
   firstName: { type: String, required: true, minLength: 2 },
   lastName: { type: String, required: true },
   email: { type: String, required: true, unique: true, lowercase: true },
-  password: { type: String, required: true, minLength: 8, maxLength: 20 },
+  password: { type: String, required: true, minLength: 8 },
   address: {
     address_1: { type: String, required: true },
     address_2: { type: String, required: false },
@@ -135,6 +139,12 @@ const userSchema = new Schema<IUser>({
   reviewCount: Number,
   voteCount: Number,
   skinConcerns: [String],
+});
+
+userSchema.pre('validate', async function (next) {
+    // if(this.password.length > 20 || this.password.length < 8) throw new Error('Do not meet max password length requirement')
+    this.password = await bcrypt.hash(this.password, +SALT_ROUNDS!);
+  
 });
 
 export default mongoose.model('User', userSchema);
