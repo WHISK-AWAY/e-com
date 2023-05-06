@@ -1,7 +1,5 @@
-import dotenv from 'dotenv';
-dotenv.config();
-const MONGO_DB_URL = process.env.MONGO_DB_URL!;
 import mongoose from 'mongoose';
+import { mongooseConnection } from './database/index';
 import {
   generateUser,
   generateProduct, // hi buddy!
@@ -11,6 +9,7 @@ import {
   generateReview,
 } from './faker/mock-data';
 import { Tag, Promo, Product, User, Order, Review } from './database/index';
+import { IUser } from './database/User';
 
 function randomElement<T>(inputArr: T[]): T {
   const i = Math.floor(Math.random() * inputArr.length);
@@ -18,14 +17,7 @@ function randomElement<T>(inputArr: T[]): T {
 }
 
 export async function seed() {
-  await mongoose.connect(MONGO_DB_URL, {
-    minPoolSize: 100,
-    maxPoolSize: 1000,
-    heartbeatFrequencyMS: 5000,
-    serverSelectionTimeoutMS: 45000,
-    keepAlive: true,
-    keepAliveInitialDelay: 300000,
-  });
+  await mongooseConnection();
 
   await mongoose.connection.db.dropDatabase();
 
@@ -91,10 +83,10 @@ export async function seed() {
 
     // attach products to user cart
     const numberInCart = Math.floor(Math.random() * 5);
-    user.cart.products = [];
+    user.cart!.products = [];
     for (let i = 0; i < numberInCart; i++) {
       const randomProduct = randomElement(newProduct);
-      user.cart.products.push({
+      user.cart!.products.push({
         product: randomProduct._id,
         price: randomProduct.price,
         qty: Math.ceil(Math.random() * 3),
@@ -103,6 +95,36 @@ export async function seed() {
 
     await user.save();
   }
+
+  const regUser: IUser = {
+    firstName: 'Wallace',
+    lastName: 'Aardman',
+    address: {
+      address_1: '62 West Wallaby Street',
+      city: 'Wigan',
+      state: 'Yorkshire',
+      zip: '11228',
+    },
+    email: 'wallace@veryoddjobs.co.uk',
+    password: 'wensleydale',
+    role: 'user',
+  };
+
+  const adminUser: IUser = {
+    firstName: 'Gromit',
+    lastName: 'Aardman',
+    address: {
+      address_1: '62 West Wallaby Street',
+      city: 'Wigan',
+      state: 'Yorkshire',
+      zip: '11228',
+    },
+    email: 'gromit@veryoddjobs.co.uk',
+    password: 'fluffles',
+    role: 'admin',
+  };
+
+  await User.insertMany([regUser, adminUser]);
 
   console.log('Seeding users successful');
 
@@ -193,28 +215,6 @@ export async function seed() {
       await currentReview.save();
     }
   }
-
-  // const checkReview = await Review.findOne().populate(['user', 'product ']);
-
-  // console.log('Check review:', checkReview);
-
-  console.log('Seeding review successful');
-  const oneOrder = await Order.findOne();
-  oneOrder!.orderStatus = 'confirmed';
-  await oneOrder?.save();
-  const newReview1 = await Review.create({
-    product: oneOrder?.orderDetails[0].productId,
-    title: 'title',
-    content: 'content',
-    rating: { overall: 2, quality: 2, value: 2 },
-    user: oneOrder?.user.userId,
-    nickname: 'nick',
-    location: 'here',
-  });
-
-  // await newReview1.populate(['product', 'user']);
-  // console.log('Review:', JSON.parse(JSON.stringify(newReview1)));
-  // console.log('Order:', JSON.parse(JSON.stringify(oneOrder)));
 
   await mongoose.disconnect();
 }
