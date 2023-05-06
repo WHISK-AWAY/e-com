@@ -3,12 +3,12 @@ import morgan from 'morgan';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import apiRouter from './api/apiRouter';
-const { auth } = require('express-oauth2-jwt-bearer');
+// const { auth } = require('express-oauth2-jwt-bearer');
 dotenv.config();
+import { auth0config } from './api/authMiddleware';
 
 const app = express();
 const PORT = process.env.PORT || 3002;
-
 
 // const jwtCheck = auth({
 //   audience: 'e-com',
@@ -16,19 +16,17 @@ const PORT = process.env.PORT || 3002;
 //   tokenSigningAlg: 'RS256',
 // });
 
-
 app.use(morgan('dev'));
 app.use(cors());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
+app.use(auth0config);
 app.use('/api', apiRouter);
 // app.use(jwtCheck);
-
 
 // app.get('/authorized', function (req, res) {
 //   res.send('Secured Resource');
 // });
-
 
 app.get('/', (req, res, next) => {
   try {
