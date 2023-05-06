@@ -11,15 +11,13 @@ dotenv.config();
 import mongoose from 'mongoose';
 const MONGO_DB_URL = process.env.MONGO_DB_URL;
 
-async function mongooseConnection() {
+export async function mongooseConnection() {
   return await mongoose.connect(MONGO_DB_URL!, {
     minPoolSize: 100,
     maxPoolSize: 1000,
     heartbeatFrequencyMS: 5000,
     serverSelectionTimeoutMS: 45000,
-    keepAlive: true,
-    keepAliveInitialDelay: 300000,
+    // keepAlive: true,
+    // keepAliveInitialDelay: 300000,
   });
 }
-
-export {mongooseConnection};
