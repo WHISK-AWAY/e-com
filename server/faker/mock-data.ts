@@ -28,8 +28,8 @@ const SKIN_CONCERNS = [
  * *USER
  */
 
-export const generateUser = (count: number): IUser[] => {
-  const users: IUser[] = [];
+export const generateUser = (count: number): Omit<IUser, '_id'>[] => {
+  const users: Omit<IUser, '_id'>[] = [];
 
   for (let i = 0; i < count; i++) {
     const firstName = faker.name.firstName();
@@ -148,7 +148,7 @@ export const generateOrder = (count: number): IOrder[] => {
       },
     ];
     const user = {
-      userId: new Types.ObjectId(),
+      userId: faker.datatype.uuid(),
       shippingInfo: {
         firstName: faker.name.firstName(),
         lastName: faker.name.lastName(),
@@ -235,7 +235,7 @@ export const generateReview = (count: number): IReview[] => {
       quality: faker.datatype.number({ min: 1, max: 5 }),
       value: faker.datatype.number({ min: 1, max: 5 }),
     };
-    const user = new Types.ObjectId();
+    const user = faker.datatype.uuid();
     const nickname = faker.internet.userName();
     const verifiedPurchase = faker.datatype.boolean();
     const location = `${faker.address.cityName()},  ${faker.address.stateAbbr()}`;

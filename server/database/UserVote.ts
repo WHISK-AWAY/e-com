@@ -2,7 +2,7 @@ import mongoose, { Schema, Types } from 'mongoose';
 import User from './User';
 
 export interface IUserVote {
-  userId: Types.ObjectId;
+  userId: string;
   reviewId: Types.ObjectId;
 }
 //is there a reason you dont want to do it as a subdoc?
@@ -19,7 +19,7 @@ export interface IUserVote {
 // (yay) mmm we'll make it fun   oh good call in that case fuck yeah auth!!!!!!! thats the spirit
 
 const UserVoteSchema = new Schema<IUserVote>({
-  userId: { type: mongoose.SchemaTypes.ObjectId, required: true },
+  userId: { type: String, required: true },
   reviewId: { type: mongoose.SchemaTypes.ObjectId, required: true },
 });
 

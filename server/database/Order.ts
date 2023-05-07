@@ -13,7 +13,7 @@ export interface IOrder {
   }[];
 
   user: {
-    userId?: Types.ObjectId;
+    userId?: string;
     shippingInfo: {
       firstName: string;
       lastName: string;
@@ -56,7 +56,7 @@ const orderSchema = new Schema<IOrder>(
       },
     ],
     user: {
-      userId: { type: mongoose.SchemaTypes.ObjectId, ref: 'User' },
+      userId: { type: String, ref: 'User' },
       shippingInfo: {
         firstName: { type: String, required: true },
         lastName: { type: String, required: true },

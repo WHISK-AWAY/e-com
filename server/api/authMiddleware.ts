@@ -4,6 +4,9 @@ import dotenv from 'dotenv';
 dotenv.config({ path: '../../.env' });
 const SECRET = process.env.SECRET;
 import { User } from '../database/index';
+import {z, ZodError} from 'zod';
+
+const zUUID = z.string().uuid();
 
 interface IToken {
   id: string;
@@ -62,22 +65,27 @@ export async function sameUserOrAdmin(
   try {
     const token = req.headers.authorization;
     const { userId } = req.params;
-    
-    if(!userId) return res.status(500).send('Invalid user ID')
+
+    const parsedUUID = zUUID.parse(userId);
+    if(!parsedUUID) return res.status(500).send('Invalid user ID')
 
     if (!token) return res.status(403).send('Invalid token');
 
     const verifiedToken = jwt.verify(token, SECRET!) as IToken;
-    if (verifiedToken.id !== userId && verifiedToken.role !== 'admin')
+    if (verifiedToken.id !== parsedUUID && verifiedToken.role !== 'admin')
       return res.status(403).send('Authorization failed: must be an admin or logged in user');
 
     next();
   } catch (err) {
+    if(err instanceof ZodError) res.status(400).send('Provided UUID does not match the database records')
     if (err instanceof JsonWebTokenError)
       res.status(403).send('You donnot belong here');
     next(err);
   }
 }
+
+
+
 // import dotenv from 'dotenv';
 // dotenv.config();
 // import { auth } from 'express-openid-connect';

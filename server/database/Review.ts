@@ -12,7 +12,7 @@ export interface IReview {
     quality: number;
     value: number;
   };
-  user: Types.ObjectId;
+  user: string;
   nickname?: string;
   location?: string;
   verifiedPurchase?: boolean;
@@ -34,7 +34,7 @@ const reviewSchema = new Schema<IReview>({
     quality: { type: Number, required: true },
     value: { type: Number, required: true },
   },
-  user: { type: mongoose.SchemaTypes.ObjectId, ref: 'User' },
+  user: { type: String, ref: 'User' },
   nickname: { type: String, required: true },
   location: { type: String, required: true },
   verifiedPurchase: { type: Boolean, required: true, default: false },

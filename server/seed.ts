@@ -96,7 +96,7 @@ export async function seed() {
     await user.save();
   }
 
-  const regUser: IUser = {
+  const regUser: Omit<IUser, '_id'> = {
     firstName: 'Wallace',
     lastName: 'Aardman',
     address: {
@@ -110,7 +110,7 @@ export async function seed() {
     role: 'user',
   };
 
-  const adminUser: IUser = {
+  const adminUser: Omit<IUser, '_id'> = {
     firstName: 'Gromit',
     lastName: 'Aardman',
     address: {
