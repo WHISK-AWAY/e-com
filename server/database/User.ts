@@ -2,6 +2,7 @@ import mongoose, { Schema, Types } from 'mongoose';
 import Product from './Product';
 import bcrypt from 'bcrypt';
 import dotenv from 'dotenv';
+import { collapseTextChangeRangesAcrossMultipleVersions } from 'typescript';
 dotenv.config({ path: '../../.env ' });
 const SALT_ROUNDS = process.env.SALT_ROUNDS || 10;
 
@@ -14,8 +15,9 @@ type TProduct = {
 export interface ICart {
   products: TProduct[];
   subtotal?(): number;
-  addProduct?(productId: mongoose.Types.ObjectId, qty: number): void;
+  addProduct?(productId: Types.ObjectId, qty: number): void;
   clearCart?(options?: { restock: boolean }): void;
+  removeProduct?(productId: Types.ObjectId, qty?: number): void;
 }
 
 const cartSchema = new Schema<ICart>(
@@ -30,26 +32,6 @@ const cartSchema = new Schema<ICart>(
   },
   { toJSON: { virtuals: true }, toObject: { virtuals: true } }
 );
-
-// TODO: remove product
-
-/**
- * Clear user cart of items
- */
-cartSchema.methods.clearCart = async function (
-  options: { restock: boolean } = { restock: false }
-): Promise<void> {
-  if (options.restock) {
-    const cartProducts = this.products;
-    while (cartProducts.length) {
-      const prod = cartProducts.pop();
-      await Product.findByIdAndUpdate(prod.product, {
-        $inc: { qty: prod.qty },
-      });
-    }
-  }
-  await this.parent().updateOne({ $set: { 'cart.products': [] } });
-};
 
 cartSchema.methods.addProduct = async function (
   productId: Types.ObjectId,
@@ -94,6 +76,75 @@ cartSchema.methods.addProduct = async function (
   await prod.updateOne({ $inc: { qty: -addToCart.qty } }).exec();
 
   return;
+};
+
+cartSchema.methods.removeProduct = async function (
+  productId: Types.ObjectId,
+  qty?: number
+): Promise<void> {
+  // productId = productId.toString();
+  try {
+    // const productsInCart: string[] = this.products.map((prod: TProduct) => prod.product.toString());
+    const productToRemove: TProduct = this.products.find(
+      (prod: TProduct) => prod.product.toString() === productId.toString()
+    );
+    if (!productToRemove) {
+      console.log('no productToRemove');
+      return;
+    }
+
+    const inventoryProduct = await Product.findById(productId);
+    if (!inventoryProduct) {
+      console.log('no inventoryProduct');
+      return;
+    }
+
+    // remove whole item if qty is not provided
+    if (!qty) qty = productToRemove.qty;
+
+    // remove the lesser of passed-in qty & qty in cart
+    const qtyToRemove = Math.min(qty, productToRemove.qty);
+
+    // add removed qty back to inventory
+    inventoryProduct.qty += qtyToRemove;
+    await inventoryProduct.save();
+
+    // remove either requested qty or entire product
+    if (qty === productToRemove.qty) {
+      this.products = this.products.filter(
+        (prod: TProduct) => prod.product.toString() !== productId.toString()
+      );
+    } else {
+      for (let prod of this.products) {
+        if (prod.product.toString() === productId.toString()) {
+          prod.qty -= qtyToRemove;
+          break;
+        }
+      }
+    }
+
+    await this.parent().save();
+  } catch (err) {
+    console.log(err);
+  }
+};
+
+/**
+ * Clear user cart of items
+ */
+cartSchema.methods.clearCart = async function (
+  options: { restock: boolean } = { restock: false }
+): Promise<void> {
+  if (options.restock) {
+    const cartProducts = this.products;
+    while (cartProducts.length) {
+      const prod = cartProducts.pop();
+      await Product.findByIdAndUpdate(prod.product, {
+        $inc: { qty: prod.qty },
+      });
+    }
+  }
+  await this.parent().updateOne({ $set: { 'cart.products': [] } });
 };
 
 cartSchema.virtual('subtotal').get(function (this: ICart) {
