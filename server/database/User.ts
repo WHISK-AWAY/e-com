@@ -105,7 +105,7 @@ cartSchema.virtual('subtotal').get(function (this: ICart) {
     tot += prod.price * prod.qty;
   }
 
-  return tot;
+  return +tot.toFixed(2);
 });
 
 export interface IUser {
