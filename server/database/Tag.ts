@@ -1,4 +1,4 @@
-import mongoose, { Schema, Types, model } from 'mongoose';
+import mongoose, { Schema, Types } from 'mongoose';
 
 export interface ITag {
   _id?: Types.ObjectId;

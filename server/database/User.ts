@@ -1,5 +1,5 @@
 import mongoose, { Schema, Types } from 'mongoose';
-import Product, { IProduct } from './Product';
+import Product from './Product';
 import bcrypt from 'bcrypt';
 import dotenv from 'dotenv';
 dotenv.config({ path: '../../.env ' });

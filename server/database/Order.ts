@@ -1,5 +1,4 @@
-import mongoose, { Schema, Types, model } from 'mongoose';
-import Promo, { IPromo } from './Promo';
+import mongoose, { Schema, Types } from 'mongoose';
 
 export interface IOrder {
   _id?: Types.ObjectId;

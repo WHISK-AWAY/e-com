@@ -1,10 +1,10 @@
-export { default as Order } from './Order';
-export { default as Promo } from './Promo';
-export { default as Product } from './Product';
-export { default as Review } from './Review';
-export { default as Tag } from './Tag';
-export { default as User } from './User';
-export { default as UserVote } from './UserVote';
+export { default as Order, IOrder } from './Order';
+export { default as Promo, IPromo } from './Promo';
+export { default as Product, IProduct } from './Product';
+export { default as Review, IReview } from './Review';
+export { default as Tag, ITag } from './Tag';
+export { default as User, IUser, ICart } from './User';
+export { default as UserVote, IUserVote } from './UserVote';
 
 import dotenv from 'dotenv';
 dotenv.config();

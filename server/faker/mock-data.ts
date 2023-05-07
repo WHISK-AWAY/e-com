@@ -1,11 +1,19 @@
-import mongoose, { Schema, Types } from 'mongoose';
+import { Types } from 'mongoose';
 import { faker } from '@faker-js/faker';
-import { IUser } from '../database/User';
-import { IProduct } from '../database/Product';
-import { ITag } from '../database/Tag';
-import { IOrder } from '../database/Order';
-import { IPromo } from '../database/Promo';
-import { Review } from '../database/Review'; //you killed tippy toes :( idk what you're talking about
+import {
+  IUser,
+  IProduct,
+  ITag,
+  IOrder,
+  IPromo,
+  IReview,
+} from '../database/index';
+// import { IUser } from '../database/User';
+// import { IProduct } from '../database/Product';
+// import { ITag } from '../database/Tag';
+// import { IOrder } from '../database/Order';
+// import { IPromo } from '../database/Promo';
+// import { IReview } from '../database/Review'; //you killed tippy toes :( idk what you're talking about
 
 const SKIN_CONCERNS = [
   'oily skin',
@@ -45,7 +53,6 @@ export const generateUser = (count: number): IUser[] => {
         {
           product: new Types.ObjectId(),
           price: faker.datatype.float({ min: 1, max: 100, precision: 0.01 }),
-          // price: faker.datatype.float({ min: 1, max: 100, precision: 0.01 }),
           qty: faker.datatype.number(2),
         },
       ],
@@ -55,8 +62,8 @@ export const generateUser = (count: number): IUser[] => {
       | 'user'
       | 'guest';
 
-    const reviewCount = faker.datatype.number({ min: 0, max: 15 }); // * handle this thru adding actual reviews + hook incrementer
-    const voteCount = faker.datatype.number({ min: 0, max: 15 }); // * handle this thru adding actual reviews + hook incrementer
+    const reviewCount = faker.datatype.number({ min: 0, max: 15 });
+    const voteCount = faker.datatype.number({ min: 0, max: 15 });
     const skinConcerns = faker.helpers.arrayElements(SKIN_CONCERNS, 2);
 
     users.push({
@@ -75,9 +82,6 @@ export const generateUser = (count: number): IUser[] => {
   }
   return users;
 };
-
-// const mockUsers = generateUser(25);
-// console.dir(mockUsers, { depth: 10 });
 
 /**
  * * PRODUCT
@@ -134,17 +138,17 @@ export const generateOrder = (count: number): IOrder[] => {
   for (let i = 0; i < count; i++) {
     const orderDetails = [
       {
-        productId: new mongoose.Types.ObjectId(),
+        productId: new Types.ObjectId(),
         productName: faker.commerce.productName(),
         productDesc: faker.commerce.productDescription(),
         brand: faker.company.name(),
         imageURL: faker.image.cats(),
         price: faker.datatype.float({ min: 20, max: 1000, precision: 0.01 }),
-        qty: faker.datatype.number({ min: 1, max: 5 }), // * arbitrary / random
+        qty: faker.datatype.number({ min: 1, max: 5 }),
       },
     ];
     const user = {
-      userId: new mongoose.Types.ObjectId(), // ! pull at least some of these from real users (not necessarily all -- simulate guest purchases...userId should be nullable)
+      userId: new Types.ObjectId(),
       shippingInfo: {
         firstName: faker.name.firstName(),
         lastName: faker.name.lastName(),
@@ -218,11 +222,11 @@ export const generatePromo = (count: number): IPromo[] => {
  * * REVIEW
  */
 
-export const generateReview = (count: number): Review[] => {
+export const generateReview = (count: number): IReview[] => {
   const reviews = [];
 
   for (let i = 0; i < count; i++) {
-    const product = new mongoose.Types.ObjectId();
+    const product = new Types.ObjectId();
     const title = faker.word.conjunction();
     const content = faker.lorem.sentence();
     const date = faker.date.recent();
@@ -231,7 +235,7 @@ export const generateReview = (count: number): Review[] => {
       quality: faker.datatype.number({ min: 1, max: 5 }),
       value: faker.datatype.number({ min: 1, max: 5 }),
     };
-    const user = new mongoose.Types.ObjectId();
+    const user = new Types.ObjectId();
     const nickname = faker.internet.userName();
     const verifiedPurchase = faker.datatype.boolean();
     const location = `${faker.address.cityName()},  ${faker.address.stateAbbr()}`;
@@ -251,6 +255,3 @@ export const generateReview = (count: number): Review[] => {
   }
   return reviews;
 };
-
-// const mockProducts = generateProduct(100);
-// console.dir(mockProducts, { depth: 10 });

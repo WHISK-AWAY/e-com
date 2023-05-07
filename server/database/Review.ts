@@ -2,7 +2,7 @@ import mongoose, { Schema, Types } from 'mongoose';
 import User from './User';
 import Order from './Order';
 
-export interface Review {
+export interface IReview {
   product: Types.ObjectId;
   title: string;
   content: string;
@@ -20,7 +20,7 @@ export interface Review {
   downvote?: number;
 }
 
-const reviewSchema = new Schema<Review>({
+const reviewSchema = new Schema<IReview>({
   product: {
     type: mongoose.SchemaTypes.ObjectId,
     ref: 'Product',

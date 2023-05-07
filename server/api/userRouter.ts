@@ -1,6 +1,6 @@
 import express from 'express';
 const router = express.Router();
-import { User, mongooseConnection } from '../database/index';
+import { User } from '../database/index';
 // import { requiresAuth, claimCheck } from 'express-openid-connect';
 // import { nextTick } from 'process';
 // import { jwtCheck, requiresAdmin } from './authMiddleware';
@@ -39,7 +39,7 @@ router.get(
         .populate({ path: 'favorites', populate: { path: 'tags' } });
 
       if (!user)
-        return res.status(404).send('User with the given ID do not exist');
+        return res.status(404).send('User with the given ID does not exist');
 
       res.status(200).json(user);
     } catch (err) {

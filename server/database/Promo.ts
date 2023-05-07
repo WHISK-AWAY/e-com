@@ -1,4 +1,4 @@
-import mongoose, { Schema, Types, model } from 'mongoose';
+import mongoose, { Schema, Types } from 'mongoose';
 
 export interface IPromo {
   _id?: Types.ObjectId;
