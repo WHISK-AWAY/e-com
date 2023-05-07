@@ -2,7 +2,7 @@ import mongoose, { Schema, Types } from 'mongoose';
 import Product from './Product';
 import bcrypt from 'bcrypt';
 import dotenv from 'dotenv';
-import { collapseTextChangeRangesAcrossMultipleVersions } from 'typescript';
+import { v4 as uuid } from 'uuid';
 dotenv.config({ path: '../../.env ' });
 const SALT_ROUNDS = process.env.SALT_ROUNDS || 10;
 
@@ -160,6 +160,7 @@ cartSchema.virtual('subtotal').get(function (this: ICart) {
 });
 
 export interface IUser {
+  _id: string,
   firstName: string;
   lastName: string;
   email: string;
@@ -180,6 +181,7 @@ export interface IUser {
 }
 
 const userSchema = new Schema<IUser>({
+  _id: {type: String, default: uuid}, 
   firstName: { type: String, required: true, minLength: 2 },
   lastName: { type: String, required: true },
   email: { type: String, required: true, unique: true, lowercase: true },
