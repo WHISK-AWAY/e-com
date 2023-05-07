@@ -10,6 +10,7 @@ dotenv.config({ path: '../.env' });
 
 const app = express();
 const PORT = process.env.PORT || 3002;
+const MONGO_DB_URL = process.env.MONGO_DB_URL;
 
 // const jwtCheck = auth({
 //   audience: 'e-com',
@@ -17,7 +18,12 @@ const PORT = process.env.PORT || 3002;
 //   tokenSigningAlg: 'RS256',
 // });
 const init = async () => {
-  await mongoose.connect(process.env.MONGO_DB_URL!);
+  if (!MONGO_DB_URL)
+    throw new Error(
+      'Failed to connect to MongoDB. Double-check that MONGO_DB_URL is defined as an environment variable, and that mongod is running.'
+    );
+  await mongoose.connect(MONGO_DB_URL);
+  console.log('connected to MongoDB @', MONGO_DB_URL);
 };
 
 app.use(morgan('dev'));
