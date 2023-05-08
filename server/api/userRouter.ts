@@ -1,17 +1,42 @@
 import express from 'express';
 const router = express.Router();
 import { User } from '../database/index';
-// import { requiresAuth, claimCheck } from 'express-openid-connect';
-// import { nextTick } from 'process';
-// import { jwtCheck, requiresAdmin } from './authMiddleware';
+import cartRouter from './cartRouter';
 import {
   checkAuthenticated,
   requireAdmin,
   sameUserOrAdmin,
 } from './authMiddleware';
 import { z, ZodError } from 'zod';
+import { zodUser } from '../../utils';
 
 const zodUserId = z.string();
+const updateZodUser = zodUser
+  .deepPartial()
+  .strict()
+  .superRefine(({ confirmPassword, password }, ctx) => {
+    if (password !== confirmPassword) {
+      ctx.addIssue({
+        code: 'custom',
+        message: 'Both password related fields are required and should match',
+      });
+    }
+  })
+  .refine(
+    ({ firstName, lastName, email, address }) => {
+      return (
+        firstName !== undefined ||
+        lastName !== undefined ||
+        email !== undefined ||
+        address?.address_1 !== undefined ||
+        address?.address_2 !== undefined ||
+        address?.city !== undefined ||
+        address?.state !== undefined ||
+        address?.zip != undefined
+      );
+    },
+    { message: 'At least one of the fields should be defined' }
+  );
 
 router.get('/', checkAuthenticated, requireAdmin, async (req, res, next) => {
   try {
@@ -49,5 +74,48 @@ router.get(
     }
   }
 );
+
+router.put(
+  '/:userId',
+  checkAuthenticated,
+  sameUserOrAdmin,
+  async (req, res, next) => {
+    try {
+      const { userId } = req.params;
+      
+      const userToUpdate = await User.findById(userId);
+      if(!userToUpdate) return res.status(404).send('User with this ID does not exist');
+
+      const updateUserInput = req.body;
+      if (!updateUserInput || updateUserInput === undefined)
+        return res.status(404).send('Nothing to update');
+
+      const parsedBody = updateZodUser.parse(updateUserInput);
+      const updatedUser = await User.updateOne({_id: userId}, updateUserInput)
+
+      res.status(200).json(updatedUser);
+    } catch (err) {
+      next(err);
+    }
+  }
+);
+
+router.delete(
+  '/:userId',
+  checkAuthenticated,
+  sameUserOrAdmin,
+  async (req, res, next) => {
+    try {
+      const { userId } = req.params;
+      const deletedUser = await User.softDelete({ _id: userId });
+
+      res.sendStatus(204);
+    } catch (err) {
+      next(err);
+    }
+  }
+);
+
+router.use('/:userId/cart', cartRouter);
 
 export default router;
