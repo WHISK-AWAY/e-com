@@ -96,7 +96,7 @@ export async function seed() {
     await user.save();
   }
 
-  const regUser: Omit<IUser, '_id'> = {
+  const regUser: Partial<IUser> = {
     firstName: 'Wallace',
     lastName: 'Aardman',
     address: {
@@ -110,7 +110,7 @@ export async function seed() {
     role: 'user',
   };
 
-  const adminUser: Omit<IUser, '_id'> = {
+  const adminUser: Partial<IUser> = {
     firstName: 'Gromit',
     lastName: 'Aardman',
     address: {
@@ -122,6 +122,15 @@ export async function seed() {
     email: 'gromit@veryoddjobs.co.uk',
     password: 'fluffles',
     role: 'admin',
+    cart: {
+      products: [
+        {
+          product: newProduct[0]._id,
+          price: newProduct[0].price,
+          qty: 2
+        }
+      ]
+    }
   };
 
   await User.insertMany([regUser, adminUser]);
