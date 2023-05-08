@@ -5,6 +5,7 @@ import dotenv from 'dotenv';
 import { v4 as uuid } from 'uuid';
 dotenv.config({ path: '../../.env ' });
 const SALT_ROUNDS = process.env.SALT_ROUNDS || 10;
+import { softDeletePlugin, SoftDeleteModel } from 'soft-delete-plugin-mongoose';
 
 type TProduct = {
   product: Types.ObjectId;
@@ -159,8 +160,8 @@ cartSchema.virtual('subtotal').get(function (this: ICart) {
   return +tot.toFixed(2);
 });
 
-export interface IUser {
-  _id: string,
+export interface IUser extends mongoose.Document {
+  _id: string;
   firstName: string;
   lastName: string;
   email: string;
@@ -181,7 +182,7 @@ export interface IUser {
 }
 
 const userSchema = new Schema<IUser>({
-  _id: {type: String, default: uuid}, 
+  _id: { type: String, default: uuid },
   firstName: { type: String, required: true, minLength: 2 },
   lastName: { type: String, required: true },
   email: { type: String, required: true, unique: true, lowercase: true },
@@ -199,7 +200,10 @@ const userSchema = new Schema<IUser>({
       ref: 'Product',
     },
   ],
-  cart: cartSchema,
+  cart: {
+    type: cartSchema,
+    default: {},
+  },
   role: {
     type: String,
     enum: ['admin', 'user', 'guest'],
@@ -211,9 +215,27 @@ const userSchema = new Schema<IUser>({
   skinConcerns: [String],
 });
 
-userSchema.pre('validate', async function (next) {
+userSchema.pre('validate', async function () {
   // if(this.password.length > 20 || this.password.length < 8) throw new Error('Do not meet max password length requirement')
   this.password = await bcrypt.hash(this.password, +SALT_ROUNDS!);
 });
 
-export default mongoose.model('User', userSchema);
+userSchema.pre('updateOne', async function (next) {
+  console.log(this.getUpdate());
+  const updatePassword = this.getUpdate() as any;
+
+  if (!updatePassword?.password) return next();
+  else
+    updatePassword.password = await bcrypt.hash(
+      updatePassword.password,
+      +SALT_ROUNDS!
+    );
+  console.log(Object.keys(updatePassword));
+});
+
+userSchema.plugin(softDeletePlugin);
+
+export default mongoose.model<IUser, SoftDeleteModel<IUser>>(
+  'User',
+  userSchema
+);
