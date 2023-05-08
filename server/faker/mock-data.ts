@@ -28,8 +28,8 @@ const SKIN_CONCERNS = [
  * *USER
  */
 
-export const generateUser = (count: number): Omit<IUser, '_id'>[] => {
-  const users: Omit<IUser, '_id'>[] = [];
+export const generateUser = (count: number): Partial<IUser>[] => {
+  const users: Partial<IUser>[] = [];
 
   for (let i = 0; i < count; i++) {
     const firstName = faker.name.firstName();
