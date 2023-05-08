@@ -1,9 +1,11 @@
-import express from 'express';
+import express, { NextFunction, Application, Response, Request } from 'express';
 import morgan from 'morgan';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import apiRouter from './api/apiRouter';
 import mongoose from 'mongoose';
+import { ZodError } from 'zod';
+import { fromZodError } from 'zod-validation-error';
 // const { auth } = require('express-oauth2-jwt-bearer');
 dotenv.config({ path: '../.env' });
 // import { auth0config } from './api/authMiddleware';
@@ -48,6 +50,15 @@ app.get('/', (req, res, next) => {
 
 app.use('*', (req, res, next) => {
   res.status(404).send('Route does not exist');
+});
+
+app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
+  if (err instanceof ZodError) {
+    console.error(err);
+    const validationError = fromZodError(err);
+    return res.status(400).send(validationError.message);
+  }
+  next(err);
 });
 
 app.listen(PORT, () => {
