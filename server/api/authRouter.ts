@@ -9,22 +9,9 @@ const SECRET = process.env.SECRET;
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import { z } from 'zod';
+import { zodUser } from '../../utils';
 
-const zodUser = z
-  .object({
-    firstName: z.string().min(1),
-    lastName: z.string().min(1),
-    email: z.string().email(),
-    password: z.string().min(8).max(20),
-    address: z.object({
-      address_1: z.string(),
-      address_2: z.string().optional(),
-      city: z.string(),
-      state: z.string(),
-      zip: z.string(),
-    }),
-    confirmPassword: z.string().min(8).max(20),
-  })
+const createZodUser = zodUser
   .strict()
   .superRefine(({ confirmPassword, password }, ctx) => {
     if (password !== confirmPassword) {
@@ -37,10 +24,16 @@ const zodUser = z
 
 router.post('/signup', async (req, res, next) => {
   try {
-    const parsedBody = zodUser.parse(req.body);
+    const parsedBody = createZodUser.parse(req.body);
     // delete parsedBody.confirmPassword;
     const newUser = await User.create(parsedBody);
-    res.status(200).json(newUser);
+    const token = jwt.sign(
+      { id: newUser._id, role: newUser.role },
+      SECRET!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    );
+
+    if (!token) return res.status(500).send('Secret is broken');
+    res.status(201).json({ newUser, token });
   } catch (err) {
     next(err);
   }
@@ -56,7 +49,11 @@ router.post('/login', async (req, res, next) => {
     if (!comparePass)
       return res.status(403).send('Password does not match database records');
 
-    const token = jwt.sign({ id: userLookup._id, role: userLookup.role }, SECRET!);
+    const token = jwt.sign(
+      { id: userLookup._id, role: userLookup.role },
+      SECRET!
+    );
+    console.log('loginTOKEN', userLookup.id);
     if (!token) return res.status(500).send('Secret is broken');
 
     res.status(200).json(token);
@@ -64,7 +61,6 @@ router.post('/login', async (req, res, next) => {
     next(err);
   }
 });
-
 
 export default router;
 
