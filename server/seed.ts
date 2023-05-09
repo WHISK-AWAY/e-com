@@ -20,7 +20,8 @@ export async function seed() {
   await mongooseConnection();
 
   await mongoose.connection.db.dropDatabase();
-
+  await Product.ensureIndexes();
+  await Tag.ensureIndexes();
   /**
    * * SEEDING TAGS
    */
