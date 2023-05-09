@@ -1,4 +1,4 @@
-import mongoose, { Schema, Types } from 'mongoose';
+import mongoose, { Schema, StringExpression, Types } from 'mongoose';
 import Product from './Product';
 import bcrypt from 'bcrypt';
 import dotenv from 'dotenv';
@@ -16,9 +16,9 @@ type TProduct = {
 export interface ICart {
   products: TProduct[];
   subtotal?(): number;
-  addProduct?(productId: Types.ObjectId, qty: number): void;
+  addProduct?(productId: string, qty: number): void;
   clearCart?(options?: { restock: boolean }): void;
-  removeProduct?(productId: Types.ObjectId, qty?: number): void;
+  removeProduct?(productId: StringExpression, qty?: number): void;
 }
 
 const cartSchema = new Schema<ICart>(
@@ -35,7 +35,7 @@ const cartSchema = new Schema<ICart>(
 );
 
 cartSchema.methods.addProduct = async function (
-  productId: Types.ObjectId,
+  productId: string,
   qty: number
 ): Promise<void> {
   // look up the product by id
@@ -57,7 +57,7 @@ cartSchema.methods.addProduct = async function (
     qty: Math.min(prod.qty, qty), // lesser of requested & available
   };
 
-  const existingProducts: Types.ObjectId[] = this.products.map(
+  const existingProducts: string[] = this.products.map(
     (prod: TProduct) => prod.product.toString()
   );
 
@@ -75,12 +75,13 @@ cartSchema.methods.addProduct = async function (
   }
 
   await prod.updateOne({ $inc: { qty: -addToCart.qty } }).exec();
+  await this.parent().save();//balls
 
   return;
 };
 
 cartSchema.methods.removeProduct = async function (
-  productId: Types.ObjectId,
+  productId: string,
   qty?: number
 ): Promise<void> {
   // productId = productId.toString();
@@ -174,7 +175,7 @@ export interface IUser extends mongoose.Document {
     zip: string;
   };
   favorites?: Types.ObjectId[];
-  cart?: ICart;
+  cart: ICart;
   role: 'admin' | 'user' | 'guest';
   reviewCount?: number;
   voteCount?: number;
