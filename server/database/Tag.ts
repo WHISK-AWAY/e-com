@@ -6,7 +6,7 @@ export interface ITag {
 }
 
 const tagSchema = new Schema<ITag>({
-  tagName: { type: String, required: true, unique: true },
+  tagName: { type: String, required: true, unique: true, minlength: 3 },
 });
 
 export default mongoose.model('Tag', tagSchema);
