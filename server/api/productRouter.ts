@@ -1,5 +1,6 @@
 import express from 'express';
-const router = express.Router();
+const router = express.Router({ mergeParams: true});
+import reviewRouter from './reviewRouter';
 import { Product, Tag } from '../database/index';
 import { checkAuthenticated, requireAdmin } from './authMiddleware';
 import { z } from 'zod';
@@ -131,5 +132,7 @@ router.delete(
     }
   }
 );
+
+router.use('/:productId/review', reviewRouter);
 
 export default router;
