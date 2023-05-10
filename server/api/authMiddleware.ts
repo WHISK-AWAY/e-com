@@ -4,7 +4,7 @@ import dotenv from 'dotenv';
 dotenv.config({ path: '../../.env' });
 const SECRET = process.env.SECRET;
 import { User } from '../database/index';
-import {z, ZodError} from 'zod';
+import { z, ZodError } from 'zod';
 
 const zUUID = z.string().uuid();
 
@@ -24,8 +24,10 @@ export function checkAuthenticated(
     const token = req.headers.authorization;
 
     if (!token) return res.status(401).send('Need token to proceed');
-    const verifiedToken = jwt.verify(token, SECRET!);
+    const verifiedToken = jwt.verify(token, SECRET!) as IToken;
     req.isAuthenticated = true;
+    req.userId = verifiedToken.id;
+    // console.log('VT', verifiedToken);
 
     next();
   } catch (err) {
@@ -67,24 +69,25 @@ export async function sameUserOrAdmin(
     const { userId } = req.params;
 
     const parsedUUID = zUUID.parse(userId);
-    if(!parsedUUID) return res.status(500).send('Invalid user ID')
+    if (!parsedUUID) return res.status(500).send('Invalid user ID');
 
     if (!token) return res.status(403).send('Invalid token');
 
     const verifiedToken = jwt.verify(token, SECRET!) as IToken;
     if (verifiedToken.id !== parsedUUID && verifiedToken.role !== 'admin')
-      return res.status(403).send('Authorization failed: must be an admin or logged in user');
+      return res
+        .status(403)
+        .send('Authorization failed: must be an admin or logged in user');
 
     next();
   } catch (err) {
-    if(err instanceof ZodError) res.status(400).send('Provided UUID does not match the database records')
+    if (err instanceof ZodError)
+      return res.status(400).send('Provided UUID does not match the database records');
     if (err instanceof JsonWebTokenError)
-      res.status(403).send('You donnot belong here');
+     return res.status(403).send('You donnot belong here');
     next(err);
   }
 }
-
-
 
 // import dotenv from 'dotenv';
 // dotenv.config();
