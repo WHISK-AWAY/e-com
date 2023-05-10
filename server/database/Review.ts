@@ -1,8 +1,9 @@
 import mongoose, { Schema, Types } from 'mongoose';
 import User from './User';
 import Order from './Order';
+import { softDeletePlugin, SoftDeleteModel } from 'soft-delete-plugin-mongoose';
 
-export interface IReview {
+export interface IReview extends mongoose.Document {
   product: Types.ObjectId;
   title: string;
   content: string;
@@ -12,7 +13,7 @@ export interface IReview {
     quality: number;
     value: number;
   };
-  user: string;
+  user: string; //userId
   nickname?: string;
   location?: string;
   verifiedPurchase?: boolean;
@@ -35,8 +36,8 @@ const reviewSchema = new Schema<IReview>({
     value: { type: Number, required: true },
   },
   user: { type: String, ref: 'User' },
-  nickname: { type: String, required: true },
-  location: { type: String, required: true },
+  nickname: { type: String, default: 'Anonymous' },
+  location: String,
   verifiedPurchase: { type: Boolean, required: true, default: false },
   upvote: { type: Number, required: true, default: 0 },
   downvote: { type: Number, required: true, default: 0 },
@@ -105,4 +106,9 @@ reviewSchema.post('save', async function (doc, next) {
   next();
 });
 
-export default mongoose.model('Review', reviewSchema);
+reviewSchema.plugin(softDeletePlugin);
+
+export default mongoose.model<IReview, SoftDeleteModel<IReview>>(
+  'Review',
+  reviewSchema
+);
