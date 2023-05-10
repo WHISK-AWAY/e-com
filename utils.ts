@@ -25,3 +25,15 @@ export const zodProduct = z.object({
   imageURL: z.string().url(),
   tags: z.string().min(3).array(),
 });
+
+export const zodReview = z.object({
+  title: z.string().min(3),
+  content: z.string().min(10),
+  rating: z.object({
+    overall: z.number().nonnegative().gte(1).lte(5),
+    quality: z.number().nonnegative().gte(1).lte(5),
+    value: z.number().nonnegative().gte(1).lte(5),
+  }),
+  nickname: z.string().min(2).optional(),
+  location: z.string().min(3).optional(),
+});
