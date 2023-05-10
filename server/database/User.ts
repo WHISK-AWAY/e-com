@@ -231,7 +231,7 @@ userSchema.pre('updateOne', async function (next) {
       updatePassword.password,
       +SALT_ROUNDS!
     );
-  console.log(Object.keys(updatePassword));
+  // console.log(Object.keys(updatePassword));
 });
 
 userSchema.plugin(softDeletePlugin);
