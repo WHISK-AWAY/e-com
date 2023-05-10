@@ -14,3 +14,14 @@ export const zodUser = z.object({
   }),
   confirmPassword: z.string().min(8).max(20),
 });
+
+
+export const zodProduct = z.object({
+  productName: z.string().min(3),
+  productDesc: z.string().min(10),
+  brand: z.string().min(3),
+  price: z.number().nonnegative().gt(20),
+  qty: z.number().nonnegative().gt(0),
+  imageURL: z.string().url(),
+  tags: z.string().min(3).array(),
+});
