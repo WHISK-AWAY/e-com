@@ -4,21 +4,13 @@ import { Product, Tag } from '../database/index';
 import { checkAuthenticated, requireAdmin } from './authMiddleware';
 import { z } from 'zod';
 import mongoose from 'mongoose';
+import { zodProduct } from '../../utils';
 
-const zodProduct = z.object({
-  productName: z.string().min(3),
-  productDesc: z.string().min(10),
-  brand: z.string().min(3),
-  price: z.number().nonnegative().gt(20),
-  qty: z.number().nonnegative().gt(0),
-  imageURL: z.string().url(),
-  tags: z.string().min(3).array().nonempty(),
-  // .refine((tags) => {
-  //   return tags.every((id) => mongoose.Types.ObjectId.isValid(id));
-  // }),
-});
-// .strict();
-// .refine(({ _id }) => mongoose.Types.ObjectId.isValid(_id));
+const createZodProduct = zodProduct.strict();
+const updateZodProduct = zodProduct
+  .deepPartial()
+  .required({ tags: true })
+  .strict();
 
 router.get('/', async (req, res, next) => {
   try {
@@ -49,7 +41,7 @@ router.get('/:productId', async (req, res, next) => {
 
 router.post('/', checkAuthenticated, requireAdmin, async (req, res, next) => {
   try {
-    const parsedBody = zodProduct.parse(req.body);
+    const parsedBody = createZodProduct.parse(req.body);
     if (!parsedBody) return res.status(404).send('All fields required');
 
     const existingTag = await Tag.find({ tagName: parsedBody.tags });
@@ -74,5 +66,70 @@ router.post('/', checkAuthenticated, requireAdmin, async (req, res, next) => {
     next(err);
   }
 });
+
+router.put(
+  '/:productId',
+  checkAuthenticated,
+  requireAdmin,
+  async (req, res, next) => {
+    try {
+      const { productId } = req.params;
+      const parsedBody = updateZodProduct.parse(req.body);
+      const existingTag = await Tag.find();
+      const incomingTag = parsedBody.tags;
+      let updateProduct;
+      const tagId = [];
+      if (!parsedBody) return res.status(400).send('No fields to update');
+
+      // useless, but i like him
+      if (!incomingTag || !incomingTag.length) {
+        parsedBody.tags = [];
+      }
+
+      const existingTagName: string[] = existingTag.map(
+        (tag: any) => tag.tagName
+      );
+
+      console.log('ET', existingTagName);
+      for (let tag of incomingTag!) {
+        console.log('tag', tag);
+        if (!existingTagName.includes(tag)) {
+          const newTag = await Tag.create({ tagName: tag });
+          tagId.push(newTag.id);
+        } else {
+          const oldTag = existingTag.find((tags: any) => tags.tagName === tag);
+          tagId.push(oldTag._id);
+        }
+      }
+      parsedBody.tags = tagId;
+      updateProduct = await Product.updateOne(parsedBody);
+
+      res.status(200).json(updateProduct);
+    } catch (err) {
+      next(err);
+    }
+  }
+);
+
+router.delete(
+  '/:productId',
+  checkAuthenticated,
+  requireAdmin,
+  async (req, res, next) => {
+    try {
+      const { productId } = req.params;
+
+      const deleteProduct = await Product.deleteOne({ _id: productId });
+      if (deleteProduct.deletedCount === 0)
+        return res
+          .status(400)
+          .send('Trouble deleting product, it might not exist');
+
+      res.sendStatus(204);
+    } catch (err) {
+      next(err);
+    }
+  }
+);
 
 export default router;
