@@ -1,10 +1,16 @@
 import mongoose, { Schema, Types } from 'mongoose';
 import User from './User';
 
+export enum userVoteChoice {
+  upvote = 'upvote',
+  downvote = 'downvote',
+}
 export interface IUserVote {
   userId: string;
   reviewId: Types.ObjectId;
+  voteChoice: userVoteChoice;
 }
+
 //is there a reason you dont want to do it as a subdoc?
 // it's an unbounded array...if someone is fucking around clicking on reviews all day, their user doc will get too big
 // do subdocs contribute to the size of a parent? I was assuming so, but I don't know that...
@@ -21,6 +27,7 @@ export interface IUserVote {
 const UserVoteSchema = new Schema<IUserVote>({
   userId: { type: String, required: true },
   reviewId: { type: mongoose.SchemaTypes.ObjectId, required: true },
+  voteChoice: { type: String, enum: ['upvote', 'downvote'], required: true },
 });
 
 UserVoteSchema.pre('save', async function () {

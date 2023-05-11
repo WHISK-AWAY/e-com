@@ -92,10 +92,10 @@ reviewSchema.pre('save', async function (next) {
 // and maybe avoid double-voting with a small document containing userid & reviewid, like a many:many through-table? would make sense to have a user track their own voted-on reviews, but that's the unbounded-array problem
 // };
 
-reviewSchema.post('save', async function (doc, next) {
+reviewSchema.post('save', async function (review, next) {
   // shit im trying to find the chat lol, yea i see your struggle
   //   // console.log('post-save "this":', this);
-  const author = await User.findById(doc.user);
+  const author = await User.findById(review.user);
 
   if (!author) return next();
 

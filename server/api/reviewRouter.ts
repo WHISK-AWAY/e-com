@@ -1,6 +1,6 @@
 import express from 'express';
 const router = express.Router({ mergeParams: true });
-import { Product, Review } from '../database/index';
+import { Product, Review, UserVote } from '../database/index';
 import { z } from 'zod';
 import mongoose from 'mongoose';
 import { checkAuthenticated, sameUserOrAdmin } from './authMiddleware';
@@ -92,6 +92,65 @@ router.post('/', checkAuthenticated, async (req, res, next) => {
   }
 });
 
+/**
+ * * UPVOTE
+ */
+router.post('/:reviewId/upvote', checkAuthenticated, async (req, res, next) => {
+  try {
+    const { reviewId } = req.params;
+    const validReviewId = zodReviewId.parse(reviewId);
+    const { productId } = req.params;
+    const validProductId = zodProductId.parse(productId);
+    const userId = req.userId;
+    
+    const userUpvote = await UserVote.find({ userId, reviewId });
+    if (userUpvote.length >= 1 && userUpvote[0].userVoteChoice === 'upvote') {
+
+      return res
+        .status(409)
+        .send('Cannot upvote review: user has already voted');
+    } else {
+      if(userUpvote.length >=1 && userUpvote[0].userVoteChoice !== 'upvote') 
+      await userUpvote[0].update({userVoteChoice: 'upvote'})
+    }
+
+    const userVoteRecord = await UserVote.create({ userId, reviewId });
+    const upvoteReview = await Review.findOneAndUpdate(
+      { _id: reviewId },
+      { $inc: { upvote: 1 } },
+      { new: true }
+    );
+
+    res.status(201).json(upvoteReview);
+  } catch (err) {
+    next(err);
+  }
+});
+
+/**
+ * * DOWNVOTE
+ */
+router.post('/:reviewId/downvote', checkAuthenticated, async(req, res ,next) => {
+  try{
+    const {reviewId} = req.params;
+    const validReviewId = zodReviewId.parse(reviewId);
+    const {productId} = req.params;
+    const validProductId = zodProductId.parse(productId);
+    const userId = req.userId;
+
+    const userDownvote = await UserVote.find({userId, reviewId});
+    if(userDownvote.length >=1 && userDownvote[0].userVoteChoice === 'downvote') return res.status(409).send('Cannot downvote review: user already downvoted this review');
+
+    const userVoteRecord = await UserVote.create({userId, reviewId});
+
+    const downvoteReview = await Review.findOneAndUpdate({_id: reviewId}, {$inc: {downvote: 1}}, {new: true});
+
+    res.status(201).json(downvoteReview);
+  }catch(err) {
+    next(err);
+  }
+});
+
 router.put('/:reviewId', checkAuthenticated, async (req, res, next) => {
   try {
     const { reviewId } = req.params;
@@ -139,17 +198,22 @@ router.delete('/:reviewId', checkAuthenticated, async (req, res, next) => {
     const userId = req.userId;
     const validReviewId = zodReviewId.parse(reviewId);
     const existingReview = await Review.findById(validReviewId);
-    const {productId} = req.params;
+    const { productId } = req.params;
 
     if (!existingReview)
       return res
         .status(404)
         .send('Cannot delete review: it does not exist in the database');
 
-    if (existingReview.user !== userId || String(existingReview.product) !== productId)
+    if (
+      existingReview.user !== userId ||
+      String(existingReview.product) !== productId
+    )
       return res
         .status(403)
-        .send('Cannot delete review: provided userID or productID does not match');
+        .send(
+          'Cannot delete review: provided userID or productID does not match'
+        );
 
     await Review.softDelete({ _id: validReviewId });
 
