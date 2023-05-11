@@ -1,6 +1,6 @@
 import express from 'express';
 const router = express.Router({ mergeParams: true });
-import { Product, Review, UserVote } from '../database/index';
+import { IUserVote, Product, Review, UserVote } from '../database/index';
 import { z } from 'zod';
 import mongoose from 'mongoose';
 import { checkAuthenticated, sameUserOrAdmin } from './authMiddleware';
@@ -102,24 +102,40 @@ router.post('/:reviewId/upvote', checkAuthenticated, async (req, res, next) => {
     const { productId } = req.params;
     const validProductId = zodProductId.parse(productId);
     const userId = req.userId;
-    
-    const userUpvote = await UserVote.find({ userId, reviewId });
-    if (userUpvote.length >= 1 && userUpvote[0].userVoteChoice === 'upvote') {
 
+    const userUpvote = await UserVote.find({ userId, reviewId });
+    let upvoteReview;
+    if (userUpvote.length >= 1 && userUpvote[0].voteChoice === 'upvote') {
       return res
         .status(409)
         .send('Cannot upvote review: user has already voted');
+    } else if (
+      userUpvote.length >= 1 &&
+      userUpvote[0].voteChoice !== 'upvote'
+    ) {
+      upvoteReview = await Review.findOneAndUpdate(
+        { _id: reviewId, product: productId },
+        { $inc: { upvote: 1, downvote: -1 } },
+        { new: true }
+      );
+      if (!upvoteReview)
+        return res.status(400).send('ProductID and ReviewID do not match');
+      await UserVote.findOneAndUpdate(
+        { userId, reviewId },
+        { voteChoice: 'upvote' }
+      );
     } else {
-      if(userUpvote.length >=1 && userUpvote[0].userVoteChoice !== 'upvote') 
-      await userUpvote[0].update({userVoteChoice: 'upvote'})
+      const userVoteRecord = await UserVote.create({
+        userId,
+        reviewId,
+        voteChoice: 'upvote',
+      });
+      upvoteReview = await Review.findOneAndUpdate(
+        { _id: reviewId },
+        { $inc: { upvote: 1 } },
+        { new: true }
+      );
     }
-
-    const userVoteRecord = await UserVote.create({ userId, reviewId });
-    const upvoteReview = await Review.findOneAndUpdate(
-      { _id: reviewId },
-      { $inc: { upvote: 1 } },
-      { new: true }
-    );
 
     res.status(201).json(upvoteReview);
   } catch (err) {
@@ -130,26 +146,66 @@ router.post('/:reviewId/upvote', checkAuthenticated, async (req, res, next) => {
 /**
  * * DOWNVOTE
  */
-router.post('/:reviewId/downvote', checkAuthenticated, async(req, res ,next) => {
-  try{
-    const {reviewId} = req.params;
-    const validReviewId = zodReviewId.parse(reviewId);
-    const {productId} = req.params;
-    const validProductId = zodProductId.parse(productId);
-    const userId = req.userId;
+router.post(
+  '/:reviewId/downvote',
+  checkAuthenticated,
+  async (req, res, next) => {
+    try {
+      const reviewId = zodReviewId.parse(req.params.reviewId);
+      const productId = zodProductId.parse(req.params.productId);
+      const userId = req.userId;
 
-    const userDownvote = await UserVote.find({userId, reviewId});
-    if(userDownvote.length >=1 && userDownvote[0].userVoteChoice === 'downvote') return res.status(409).send('Cannot downvote review: user already downvoted this review');
+      let downvoteReview;
 
-    const userVoteRecord = await UserVote.create({userId, reviewId});
+      const userDownvote: IUserVote | null = await UserVote.findOne({
+        userId,
+        reviewId,
+      });
 
-    const downvoteReview = await Review.findOneAndUpdate({_id: reviewId}, {$inc: {downvote: 1}}, {new: true});
+      if (!userDownvote) {
+        // user has not previously voted on this review
+        await UserVote.create({
+          userId,
+          reviewId,
+          voteChoice: 'downvote',
+        });
 
-    res.status(201).json(downvoteReview);
-  }catch(err) {
-    next(err);
+        downvoteReview = await Review.findOneAndUpdate(
+          { _id: reviewId },
+          { $inc: { downvote: 1 } },
+          { new: true }
+        );
+      } else if (userDownvote.voteChoice === 'upvote') {
+        // user had previously upvoted & is changing vote
+
+        downvoteReview = await Review.findOneAndUpdate(
+          { _id: reviewId, product: productId },
+          { $inc: { upvote: -1, downvote: 1 } },
+          { new: true }
+        );
+
+        if (!downvoteReview)
+          return res
+            .status(400)
+            .json({ message: 'ProductID and ReviewID do not match' });
+
+        await UserVote.findOneAndUpdate(
+          { userId, reviewId },
+          { voteChoice: 'downvote' }
+        );
+      } else if (userDownvote.voteChoice === 'downvote') {
+        // user has already downvoted this review
+        return res.status(409).json({
+          message: 'Cannot downvote review: user already downvoted this review',
+        });
+      }
+
+      res.status(201).json(downvoteReview);
+    } catch (err) {
+      next(err);
+    }
   }
-});
+);
 
 router.put('/:reviewId', checkAuthenticated, async (req, res, next) => {
   try {
