@@ -57,8 +57,8 @@ cartSchema.methods.addProduct = async function (
     qty: Math.min(prod.qty, qty), // lesser of requested & available
   };
 
-  const existingProducts: string[] = this.products.map(
-    (prod: TProduct) => prod.product.toString()
+  const existingProducts: string[] = this.products.map((prod: TProduct) =>
+    prod.product.toString()
   );
 
   if (existingProducts.includes(productId)) {
@@ -75,7 +75,7 @@ cartSchema.methods.addProduct = async function (
   }
 
   await prod.updateOne({ $inc: { qty: -addToCart.qty } }).exec();
-  await this.parent().save();//balls
+  await this.parent().save(); //balls
 
   return;
 };
@@ -211,8 +211,8 @@ const userSchema = new Schema<IUser>({
     required: true,
     default: 'user',
   },
-  reviewCount: Number,
-  voteCount: Number,
+  reviewCount: { type: Number, default: 0 },
+  voteCount: { type: Number, default: 0 },
   skinConcerns: [String],
 });
 
