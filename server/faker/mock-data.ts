@@ -222,7 +222,7 @@ export const generatePromo = (count: number): IPromo[] => {
  * * REVIEW
  */
 
-export const generateReview = (count: number): IReview[] => {
+export const generateReview = (count: number): Partial<IReview>[] => {
   const reviews = [];
 
   for (let i = 0; i < count; i++) {
