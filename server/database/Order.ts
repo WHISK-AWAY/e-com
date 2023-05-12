@@ -26,9 +26,8 @@ export interface IOrder {
     };
     paymentInfo: {
       paymentType: string;
-      // cardType: string,
       cardNum: string;
-      exp: Date;
+      exp: string;
       cvv: string;
     };
   };
@@ -71,7 +70,7 @@ const orderSchema = new Schema<IOrder>(
         paymentType: { type: String, required: true },
         // cardType: {type: String, requred: true},
         cardNum: { type: String, required: true },
-        exp: { type: Date, required: true },
+        exp: { type: String, required: true },
         cvv: String,
       },
     },
