@@ -7,7 +7,7 @@ dotenv.config({ path: '../../.env ' });
 const SALT_ROUNDS = process.env.SALT_ROUNDS || 10;
 import { softDeletePlugin, SoftDeleteModel } from 'soft-delete-plugin-mongoose';
 
-type TProduct = {
+export type TProduct = {
   product: Types.ObjectId;
   price: number;
   qty: number;
@@ -16,7 +16,7 @@ type TProduct = {
 export interface ICart {
   products: TProduct[];
   subtotal?(): number;
-  addProduct?(productId: string, qty: number): void;
+  addProduct?(productId: string, qty: number): Promise<TCartReturn | null>;
   clearCart?(options?: { restock: boolean }): void;
   removeProduct?(productId: StringExpression, qty?: number): void;
 }
@@ -34,17 +34,23 @@ const cartSchema = new Schema<ICart>(
   { toJSON: { virtuals: true }, toObject: { virtuals: true } }
 );
 
+type TCartReturn = {
+  productId: mongoose.Types.ObjectId;
+  productName: string;
+  qtyAdded: number;
+};
+
 cartSchema.methods.addProduct = async function (
   productId: string,
   qty: number
-): Promise<void> {
+): Promise<TCartReturn | null> {
   // look up the product by id
   // compare add qty to qty available on product doc
   // if we're trying to add too many --- add only as many as we have, and notify (?)
-  if (!qty || qty < 1) return;
+  if (!qty || qty < 1) return null;
 
   const prod = await Product.findById(productId);
-  if (!prod) return;
+  if (!prod) return null;
 
   if (!this.products || this.products.length === 0) {
     // if cart has no products, initialize it as an empty array so we're safe to push into it later
@@ -56,6 +62,8 @@ cartSchema.methods.addProduct = async function (
     price: prod.price,
     qty: Math.min(prod.qty, qty), // lesser of requested & available
   };
+
+  if (addToCart.qty === 0) return null;
 
   const existingProducts: string[] = this.products.map((prod: TProduct) =>
     prod.product.toString()
@@ -77,7 +85,11 @@ cartSchema.methods.addProduct = async function (
   await prod.updateOne({ $inc: { qty: -addToCart.qty } }).exec();
   await this.parent().save(); //balls
 
-  return;
+  return {
+    productId: prod.id,
+    productName: prod.productName,
+    qtyAdded: addToCart.qty,
+  };
 };
 
 cartSchema.methods.removeProduct = async function (
