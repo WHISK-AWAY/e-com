@@ -2,6 +2,7 @@ import express from 'express';
 const router = express.Router();
 import { User } from '../database/index';
 import cartRouter from './cartRouter';
+import orderRouter from './orderRouter';
 import {
   checkAuthenticated,
   requireAdmin,
@@ -82,16 +83,20 @@ router.put(
   async (req, res, next) => {
     try {
       const { userId } = req.params;
-      
+
       const userToUpdate = await User.findById(userId);
-      if(!userToUpdate) return res.status(404).send('User with this ID does not exist');
+      if (!userToUpdate)
+        return res.status(404).send('User with this ID does not exist');
 
       const updateUserInput = req.body;
       if (!updateUserInput || updateUserInput === undefined)
         return res.status(404).send('Nothing to update');
 
       const parsedBody = updateZodUser.parse(updateUserInput);
-      const updatedUser = await User.updateOne({_id: userId}, updateUserInput)
+      const updatedUser = await User.updateOne(
+        { _id: userId },
+        updateUserInput
+      );
 
       res.status(200).json(updatedUser);
     } catch (err) {
@@ -117,5 +122,6 @@ router.delete(
 );
 
 router.use('/:userId/cart', cartRouter);
+router.use('/:userId/order', orderRouter);
 
 export default router;
