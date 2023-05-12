@@ -19,6 +19,8 @@ export interface ICart {
   addProduct?(productId: string, qty: number): Promise<TCartReturn | null>;
   clearCart?(options?: { restock: boolean }): void;
   removeProduct?(productId: StringExpression, qty?: number): void;
+  updatedAt?: Date;
+  createdAt?: Date;
 }
 
 const cartSchema = new Schema<ICart>(
@@ -31,7 +33,7 @@ const cartSchema = new Schema<ICart>(
       },
     ],
   },
-  { toJSON: { virtuals: true }, toObject: { virtuals: true } }
+  { timestamps: true, toJSON: { virtuals: true }, toObject: { virtuals: true } }
 );
 
 type TCartReturn = {
@@ -156,6 +158,7 @@ cartSchema.methods.clearCart = async function (
       await Product.findByIdAndUpdate(prod.product, {
         $inc: { qty: prod.qty },
       });
+      // console.log(`returning qty ${prod.qty} of ${prod.id}`)
     }
   }
   await this.parent().updateOne({ $set: { 'cart.products': [] } });
@@ -192,41 +195,59 @@ export interface IUser extends mongoose.Document {
   reviewCount?: number;
   voteCount?: number;
   skinConcerns?: string[];
+  purgeInactiveCart?(): void;
 }
 
-const userSchema = new Schema<IUser>({
-  _id: { type: String, default: uuid },
-  firstName: { type: String, required: true, minLength: 2 },
-  lastName: { type: String, required: true },
-  email: { type: String, required: true, unique: true, lowercase: true },
-  password: { type: String, required: true, minLength: 8 },
-  address: {
-    address_1: { type: String, required: true },
-    address_2: { type: String, required: false },
-    city: { type: String, required: true },
-    state: { type: String, required: true },
-    zip: { type: String, required: true },
-  },
-  favorites: [
-    {
-      type: mongoose.SchemaTypes.ObjectId,
-      ref: 'Product',
+const userSchema = new Schema<IUser>(
+  {
+    _id: { type: String, default: uuid },
+    firstName: { type: String, required: true, minLength: 2 },
+    lastName: { type: String, required: true },
+    email: { type: String, required: true, unique: true, lowercase: true },
+    password: { type: String, required: true, minLength: 8 },
+    address: {
+      address_1: { type: String, required: true },
+      address_2: { type: String, required: false },
+      city: { type: String, required: true },
+      state: { type: String, required: true },
+      zip: { type: String, required: true },
     },
-  ],
-  cart: {
-    type: cartSchema,
-    default: {},
+    favorites: [
+      {
+        type: mongoose.SchemaTypes.ObjectId,
+        ref: 'Product',
+      },
+    ],
+    cart: {
+      type: cartSchema,
+      default: {},
+    },
+    role: {
+      type: String,
+      enum: ['admin', 'user', 'guest'],
+      required: true,
+      default: 'user',
+    },
+    reviewCount: { type: Number, default: 0 },
+    voteCount: { type: Number, default: 0 },
+    skinConcerns: [String],
   },
-  role: {
-    type: String,
-    enum: ['admin', 'user', 'guest'],
-    required: true,
-    default: 'user',
-  },
-  reviewCount: { type: Number, default: 0 },
-  voteCount: { type: Number, default: 0 },
-  skinConcerns: [String],
-});
+  {
+    statics: {
+      async purgeInactiveCart() {
+        const msPerDay = 1000 * 60 * 60 * 24;
+        const purgeDay = new Date(Date.now() - msPerDay * 2);
+
+        const allUserCart = await this.find({'cart.updatedAt': { $lte: purgeDay }});
+
+        if(!allUserCart.length) return;
+        for (let user of allUserCart) {
+          await user.cart.clearCart!({restock:true})
+        }
+      },
+    },
+  }
+);
 
 userSchema.pre('validate', async function () {
   // if(this.password.length > 20 || this.password.length < 8) throw new Error('Do not meet max password length requirement')

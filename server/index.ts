@@ -6,6 +6,7 @@ import apiRouter from './api/apiRouter';
 import mongoose from 'mongoose';
 import { ZodError } from 'zod';
 import { fromZodError } from 'zod-validation-error';
+import { User } from './database/index';
 // const { auth } = require('express-oauth2-jwt-bearer');
 dotenv.config({ path: '../.env' });
 // import { auth0config } from './api/authMiddleware';
@@ -26,6 +27,11 @@ const init = async () => {
     );
   await mongoose.connect(MONGO_DB_URL);
   console.log('connected to MongoDB @', MONGO_DB_URL);
+
+  const msPerDay = 1000 * 60 * 60 * 24;
+  setInterval(() => {
+    User.purgeInactiveCart();
+  }, msPerDay)
 };
 
 app.use(morgan('dev'));
@@ -43,6 +49,15 @@ app.use('/api', apiRouter);
 app.get('/', (req, res, next) => {
   try {
     res.status(200).send('homepage');
+  } catch (err) {
+    next(err);
+  }
+});
+
+app.patch('/purge-inactive-cart', async (req, res, next) => {
+  try {
+    const purgeCart = await User.purgeInactiveCart();
+    res.status(204).send('ok');
   } catch (err) {
     next(err);
   }
