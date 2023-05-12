@@ -37,3 +37,34 @@ export const zodReview = z.object({
   nickname: z.string().min(2).optional(),
   location: z.string().min(3).optional(),
 });
+
+export const zodOrder = z.object({
+  orderDetails: z.object({
+    productId: z.string(),
+    qty: z.number().min(1)
+  }).array(),
+  user: z.object({
+    shippingInfo: z.object({
+      firstName: z.string().min(2),
+      lastName: z.string().min(2),
+      email: z.string().email(),
+      address_1: z.string().min(5),
+      address_2: z.string().min(2).optional(),
+      city: z.string().min(1),
+      state: z.string().min(2),
+      zip: z.string().min(5),
+    }),
+    paymentInfo: z.object({
+      paymentType: z.string().min(3),
+      cardNum: z.string().min(16),
+      exp: z.string(),
+      cvv: z.string().min(3),
+    }),
+  }),
+  promoCode: z
+    .object({
+      promoCodeName: z.string().min(2),
+      
+    })
+    .optional(),
+});
