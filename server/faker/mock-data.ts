@@ -135,7 +135,11 @@ export const generateTag = (count: number): ITag[] => {
 export const generateOrder = (count: number): IOrder[] => {
   const orders = [];
 
+
   for (let i = 0; i < count; i++) {
+    let expDate:any = faker.date.future(4);
+    expDate = `${expDate.getMonth()+1}/${expDate.getFullYear()}`
+
     const orderDetails = [
       {
         productId: new Types.ObjectId(),
@@ -162,7 +166,7 @@ export const generateOrder = (count: number): IOrder[] => {
       paymentInfo: {
         paymentType: faker.finance.creditCardIssuer(),
         cardNum: faker.finance.creditCardNumber(),
-        exp: faker.date.future(4),
+        exp: expDate,
         cvv: faker.finance.creditCardCVV(),
       },
     };
