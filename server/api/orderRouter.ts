@@ -5,7 +5,8 @@ const router = express.Router({ mergeParams: true });
 import { z } from 'zod';
 import validator from 'validator';
 import { User, Order, Promo, Product } from '../database/index';
-import { zodOrder } from '../../utils';
+import { zodOrder, zodUserId, zodOrderId } from '../../utils';
+import { TProduct } from '../database/User';
 
 const zodCreateOrder = zodOrder
   .strict()
@@ -37,26 +38,60 @@ const zodCreateOrder = zodOrder
     }
   );
 
-const zodOrderId = z.string().refine(
-  (orderId) => {
-    return mongoose.Types.ObjectId.isValid(orderId);
-  },
-  {
-    message: 'Invalid orderID',
-  }
-);
+// ensure correct shape of user input
+type TzodOrderInput = z.infer<typeof zodOrder>;
 
-type TzodOrder = z.infer<typeof zodOrder> & {
-  promoCode?: { promoCodeRate: number };
-  orderDetails?: {
+// ensure correct shape for Order.create() query
+// since promoCode exists already, have to re-write it in the way Order expects
+type TOrderQuery = Omit<TzodOrderInput, 'promoCode'> & {
+  orderDetails: {
+    productId: mongoose.Types.ObjectId;
     productName: string;
     productDesc: string;
     brand: string;
-    price: number;
     imageURL: string;
+    price: number;
+    qty: number;
   }[];
+  promoCode?: {
+    promoCodeName: string;
+    promoCodeRate: number;
+  };
 };
 
+// have to convince TS of the shape of a "populated" user cart
+type TExpandedCartProduct = {
+  product: {
+    _id: mongoose.Types.ObjectId;
+    productName: string;
+    productDesc: string;
+    brand: string;
+    imageURL: string;
+    price: number;
+    qty: number;
+    tags: mongoose.Types.ObjectId[];
+    __v: number;
+  };
+  price: number;
+  qty: number;
+  _id: mongoose.Types.ObjectId;
+};
+
+// retrieve all orders for logged-in user
+router.get('/', checkAuthenticated, sameUserOrAdmin, async (req, res, next) => {
+  try {
+    const userId = req.params.userId;
+    const userOrders = await Order.find({ 'user.userId': userId });
+    if (!userOrders.length)
+      return res.status(404).json({ message: 'No orders found for this user' });
+
+    res.status(200).json(userOrders);
+  } catch (err) {
+    next(err);
+  }
+});
+
+// retrieve order by ID
 router.get(
   '/:orderId',
   checkAuthenticated,
@@ -67,16 +102,15 @@ router.get(
       const { userId } = req.params;
       const order = await Order.findById(validOrderId);
 
-      console.log('UID', userId);
-      console.log('OUID', order.user.userId);
+      if (!order)
+        return res.status(404).send('Order with given ID does not exist');
+
       if (userId !== order.user.userId)
         return res
           .status(401)
           .send(
             'Provided userID does not match database record on given orderID'
           );
-      if (!order)
-        return res.status(404).send('Order with given ID does not exist');
 
       res.status(200).json(order);
     } catch (err) {
@@ -85,6 +119,7 @@ router.get(
   }
 );
 
+// create new order
 router.post(
   '/',
   checkAuthenticated,
@@ -92,27 +127,41 @@ router.post(
   async (req, res, next) => {
     try {
       const { userId } = req.params;
+      const parsedBody = zodOrder.parse(req.body) as TzodOrderInput;
 
-      const parsedBody = zodOrder.parse(req.body) as TzodOrder;
-      const userPromoCode = parsedBody.promoCode;
-
-      const orderProducts = parsedBody.orderDetails.map(
-        (order) => order.productId
+      // find user & read cart info
+      const user = await User.findById(userId).populate(
+        'cart.products.product'
       );
+      if (!user) return res.status(404).json({ message: 'User not found' });
 
-      const productLookup = await Product.find({ _id: orderProducts });
+      // re-cast user cart: TS doesn't know the shape of a "populated" cart
+      const userCart = user.cart.products as unknown as TExpandedCartProduct[];
+      if (!userCart.length)
+        return res.status(409).json({ message: "User's cart is empty" });
 
-      for (let field of parsedBody.orderDetails) {
-        const currentProduct = productLookup.find(
-          (prod: any) => field.productId === prod.id.toString()
-        );
-        field.productName = currentProduct.productName;
-        field.productDesc = currentProduct.productDesc;
-        field.brand = currentProduct.brand;
-        field.imageURL = currentProduct.imageURL;
-        field.price = currentProduct.price;
-      }
+      // build up object for new order creation
+      const newOrderInput: TOrderQuery = {
+        orderDetails: userCart.map((prod) => {
+          return {
+            productId: prod.product._id,
+            brand: prod.product.brand,
+            imageURL: prod.product.imageURL,
+            price: prod.price,
+            productDesc: prod.product.productDesc,
+            productName: prod.product.productName,
+            qty: prod.qty,
+          };
+        }),
+        user: {
+          userId,
+          shippingInfo: parsedBody.user.shippingInfo,
+          paymentInfo: parsedBody.user.paymentInfo,
+        },
+      };
 
+      // if the user provided a promo code, verify it & add to new order object
+      const userPromoCode = parsedBody.promoCode;
 
       if (userPromoCode) {
         const promoLookup = await Promo.findOne({
@@ -120,20 +169,26 @@ router.post(
         });
 
         if (promoLookup) {
-          userPromoCode.promoCodeName = promoLookup.promoCodeName;
-          parsedBody.promoCode!.promoCodeRate = promoLookup.promoRate;
-        } else {
-          delete parsedBody.promoCode;
+          newOrderInput.promoCode = {
+            promoCodeName: promoLookup.promoCodeName,
+            promoCodeRate: promoLookup.promoCodeRate,
+          };
         }
       }
 
-      const newOrder = await Order.create(parsedBody);
+      // create new order
+      const newOrder = await Order.create(newOrderInput);
 
-      console.log('NO', newOrder);
-      res.status(204).json(newOrder);
+      // purge user cart if order creation was successful
+      if (newOrder) {
+        user.cart.clearCart!({ restock: false });
+      }
+
+      res.status(201).json(newOrder);
     } catch (err) {
       next(err);
     }
   }
 );
+
 export default router;
