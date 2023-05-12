@@ -39,10 +39,15 @@ router.post(
       const { productId, qty } = zodProduct.parse(req.body);
 
       const addItem = await user.cart.addProduct!(productId, qty);
+
+      
       if (!addItem)
         res
           .status(409)
           .json({ message: 'Not enough inventory - nothing added to cart' });
+
+     
+
 
       res.status(201).json(addItem);
     } catch (err) {
