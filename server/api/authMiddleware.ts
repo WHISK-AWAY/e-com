@@ -82,9 +82,11 @@ export async function sameUserOrAdmin(
     next();
   } catch (err) {
     if (err instanceof ZodError)
-      return res.status(400).send('Provided UUID does not match the database records');
+      return res
+        .status(400)
+        .send('Provided UUID does not match the database records');
     if (err instanceof JsonWebTokenError)
-     return res.status(403).send('You donnot belong here');
+      return res.status(403).send('You donnot belong here');
     next(err);
   }
 }
