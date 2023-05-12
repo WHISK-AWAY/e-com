@@ -6,7 +6,7 @@ import { z } from 'zod';
 import validator from 'validator';
 import { User, Order, Promo, Product } from '../database/index';
 import { zodOrder, zodUserId, zodOrderId } from '../../utils';
-import { TProduct } from '../database/User';
+import { TProduct } from '../database/dbTypes';
 
 const zodCreateOrder = zodOrder
   .strict()

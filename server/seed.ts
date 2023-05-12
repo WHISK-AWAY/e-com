@@ -9,7 +9,7 @@ import {
   generateReview,
 } from './faker/mock-data';
 import { Tag, Promo, Product, User, Order, Review } from './database/index';
-import { IUser } from './database/User';
+import { IUser } from './database/dbTypes';
 
 function randomElement<T>(inputArr: T[]): T {
   const i = Math.floor(Math.random() * inputArr.length);

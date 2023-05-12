@@ -6,22 +6,7 @@ import { v4 as uuid } from 'uuid';
 dotenv.config({ path: '../../.env ' });
 const SALT_ROUNDS = process.env.SALT_ROUNDS || 10;
 import { softDeletePlugin, SoftDeleteModel } from 'soft-delete-plugin-mongoose';
-
-export type TProduct = {
-  product: Types.ObjectId;
-  price: number;
-  qty: number;
-};
-
-export interface ICart {
-  products: TProduct[];
-  subtotal?(): number;
-  addProduct?(productId: string, qty: number): Promise<TCartReturn | null>;
-  clearCart?(options?: { restock: boolean }): void;
-  removeProduct?(productId: StringExpression, qty?: number): void;
-  updatedAt?: Date;
-  createdAt?: Date;
-}
+import { ICart, TProduct, TCartReturn, IUser } from './dbTypes';
 
 const cartSchema = new Schema<ICart>(
   {
@@ -35,12 +20,6 @@ const cartSchema = new Schema<ICart>(
   },
   { timestamps: true, toJSON: { virtuals: true }, toObject: { virtuals: true } }
 );
-
-type TCartReturn = {
-  productId: mongoose.Types.ObjectId;
-  productName: string;
-  qtyAdded: number;
-};
 
 cartSchema.methods.addProduct = async function (
   productId: string,
@@ -176,28 +155,6 @@ cartSchema.virtual('subtotal').get(function (this: ICart) {
   return +tot.toFixed(2);
 });
 
-export interface IUser extends mongoose.Document {
-  _id: string;
-  firstName: string;
-  lastName: string;
-  email: string;
-  password: string;
-  address: {
-    address_1: string;
-    address_2?: string;
-    city: string;
-    state: string;
-    zip: string;
-  };
-  favorites?: Types.ObjectId[];
-  cart: ICart;
-  role: 'admin' | 'user' | 'guest';
-  reviewCount?: number;
-  voteCount?: number;
-  skinConcerns?: string[];
-  purgeInactiveCart?(): void;
-}
-
 const userSchema = new Schema<IUser>(
   {
     _id: { type: String, default: uuid },
@@ -238,11 +195,13 @@ const userSchema = new Schema<IUser>(
         const msPerDay = 1000 * 60 * 60 * 24;
         const purgeDay = new Date(Date.now() - msPerDay * 2);
 
-        const allUserCart = await this.find({'cart.updatedAt': { $lte: purgeDay }});
+        const allUserCart = await this.find({
+          'cart.updatedAt': { $lte: purgeDay },
+        });
 
-        if(!allUserCart.length) return;
+        if (!allUserCart.length) return;
         for (let user of allUserCart) {
-          await user.cart.clearCart!({restock:true})
+          await user.cart.clearCart!({ restock: true });
         }
       },
     },
