@@ -1,5 +1,7 @@
 import mongoose, { Schema, Types } from 'mongoose';
 
+export const MAX_PROMO_RATE = 0.5;
+
 export interface IPromo {
   _id?: Types.ObjectId;
   promoCodeName: string;
@@ -7,7 +9,7 @@ export interface IPromo {
 }
 
 const promoSchema = new Schema<IPromo>({
-  promoCodeName: { type: String, required: true },
+  promoCodeName: { type: String, required: true, unique: true },
   promoRate: { type: Number, required: true },
 });
 

@@ -22,6 +22,7 @@ export async function seed() {
   await mongoose.connection.db.dropDatabase();
   await Product.ensureIndexes();
   await Tag.ensureIndexes();
+  await Promo.ensureIndexes();
   /**
    * * SEEDING TAGS
    */
@@ -128,10 +129,10 @@ export async function seed() {
         {
           product: newProduct[0]._id,
           price: newProduct[0].price,
-          qty: 2
-        }
-      ]
-    }
+          qty: 2,
+        },
+      ],
+    },
   };
 
   await User.insertMany([regUser, adminUser]);
