@@ -1,4 +1,18 @@
-import {z} from 'zod';
+import mongoose from 'mongoose';
+import { z } from 'zod';
+
+export const zodUserId = z
+  .string()
+  .uuid({ message: 'Provided user ID is not of the correct format' });
+
+export const zodOrderId = z.string().refine(
+  (orderId) => {
+    return mongoose.Types.ObjectId.isValid(orderId);
+  },
+  {
+    message: 'Invalid orderID',
+  }
+);
 
 export const zodUser = z.object({
   firstName: z.string().min(1),
@@ -14,7 +28,6 @@ export const zodUser = z.object({
   }),
   confirmPassword: z.string().min(8).max(20),
 });
-
 
 export const zodProduct = z.object({
   productName: z.string().min(3),
@@ -39,11 +52,14 @@ export const zodReview = z.object({
 });
 
 export const zodOrder = z.object({
-  orderDetails: z.object({
-    productId: z.string(),
-    qty: z.number().min(1)
-  }).array(),
+  // orderDetails: z
+  //   .object({
+  //     productId: z.string(),
+  //     qty: z.number().min(1),
+  //   })
+  //   .array(),
   user: z.object({
+    userId: z.string().optional(),
     shippingInfo: z.object({
       firstName: z.string().min(2),
       lastName: z.string().min(2),
@@ -64,7 +80,6 @@ export const zodOrder = z.object({
   promoCode: z
     .object({
       promoCodeName: z.string().min(2),
-      
     })
     .optional(),
 });
