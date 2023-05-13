@@ -65,32 +65,44 @@ const userSchema = new Schema<IUser>(
   },
   {
     statics: {
-      async purgeInactiveCart() {
-        const msPerDay = 1000 * 60 * 60 * 24;
-        const purgeDay = new Date(Date.now() - msPerDay * 2);
-
-        const allUserCart = await this.find({
-          'cart.updatedAt': { $lte: purgeDay },
-        });
-
-        if (!allUserCart.length) return;
-        for (let user of allUserCart) {
-          await user.cart.clearCart!({ restock: true });
-        }
-      },
+      // async purgeInactiveCart() {
+      //   const msPerDay = 1000 * 60 * 60 * 24;
+      //   const purgeDay = new Date(Date.now() - msPerDay * 2);
+      //   const allUserCart = await this.find({
+      //     'cart.updatedAt': { $lte: purgeDay },
+      //   });
+      //   if (!allUserCart.length) return;
+      //   for (let user of allUserCart) {
+      //     await user.cart.clearCart!({ restock: true });
+      //   }
+      // },
     },
   }
 );
 
 userSchema.pre('validate', hashPassword);
 userSchema.pre('updateOne', hashUpdatedPassword);
-userSchema.plugin(softDeletePlugin);
 cartSchema.methods.addProduct = addToCart;
 cartSchema.methods.removeProduct = removeFromCart;
 cartSchema.methods.clearCart = clearCart;
 cartSchema.virtual('subtotal').get(cartSubtotal);
 
-export default mongoose.model<IUser, SoftDeleteModel<IUser>>(
-  'User',
-  userSchema
-);
+userSchema.static('purgeInactiveCart', async function () {
+  const msPerDay = 1000 * 60 * 60 * 24;
+  const purgeDay = new Date(Date.now() - msPerDay * 2);
+
+  const allUserCart = await this.find({
+    'cart.updatedAt': { $lte: purgeDay },
+  });
+
+  if (!allUserCart.length) return;
+  for (let user of allUserCart) {
+    await user.cart.clearCart!({ restock: true });
+  }
+});
+
+userSchema.plugin(softDeletePlugin);
+export default mongoose.model<
+  IUser,
+  SoftDeleteModel<IUser> & { purgeInactiveCart: () => void }
+>('User', userSchema);

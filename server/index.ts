@@ -31,7 +31,7 @@ const init = async () => {
   const msPerDay = 1000 * 60 * 60 * 24;
   setInterval(() => {
     User.purgeInactiveCart();
-  }, msPerDay)
+  }, msPerDay);
 };
 
 app.use(morgan('dev'));
