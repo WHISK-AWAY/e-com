@@ -53,10 +53,10 @@ router.post('/login', async (req, res, next) => {
       { id: userLookup._id, role: userLookup.role },
       SECRET!
     );
-    console.log('loginTOKEN', userLookup.id);
+    // console.log('loginTOKEN', userLookup.id);
     if (!token) return res.status(500).send('Secret is broken');
 
-    res.status(200).json(token);
+    res.status(200).json({token, userId: userLookup._id});
   } catch (err) {
     next(err);
   }
